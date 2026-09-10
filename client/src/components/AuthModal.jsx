@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 
 const getApiUrl = (path) => {
-  if (typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '5174')) {
-    return `http://localhost:5000${path}`;
-  }
   return path;
 };
 
@@ -111,8 +108,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               onClick={() => handleQuickLogin('rohan@gmail.com', 'password123')}
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: '#fff', padding: '0.5rem 0.65rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700', textAlign: 'left' }}
             >
-              ⚽ <b>Rohan (Player & Owner)</b>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Forward • HotFut Turf Owner</div>
+              ⚽ <b>Rohan (Player)</b>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Forward • Match Host</div>
             </button>
 
             <button
@@ -120,8 +117,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               onClick={() => handleQuickLogin('arjun@gmail.com', 'password123')}
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: '#fff', padding: '0.5rem 0.65rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700', textAlign: 'left' }}
             >
-              ⚽ <b>Arjun (Player & Owner)</b>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Midfield • Sportzone Owner</div>
+              ⚽ <b>Arjun (Player)</b>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Midfield • Match Host</div>
             </button>
 
             <button

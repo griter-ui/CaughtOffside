@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'football_passport_secret_key_2026';
+if (process.env.NODE_ENV === 'production' &&
+    (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32 ||
+     ['replace-with-a-long-random-secret', 'football_passport_secret_key_2026'].includes(process.env.JWT_SECRET))) {
+  throw new Error('Set JWT_SECRET to a random secret of at least 32 characters before deploying.');
+}
+const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];

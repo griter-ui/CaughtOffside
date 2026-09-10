@@ -8,9 +8,10 @@ export function isMatchExpired(dateStr, timeSlotStr) {
   if (!dateStr) return false;
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+  const indiaNow = new Date(now.getTime() + 19800000);
+  const year = indiaNow.getUTCFullYear();
+  const month = String(indiaNow.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(indiaNow.getUTCDate()).padStart(2, '0');
   const todayISO = `${year}-${month}-${day}`;
 
   // If match date is prior to today's date -> expired
@@ -44,5 +45,5 @@ function parseTimeToDate(dateStr, timeStr) {
   if (ampm === 'AM' && hours === 12) hours = 0;
 
   const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d, hours, minutes, 0, 0);
+  return new Date(Date.UTC(y, m - 1, d, hours, minutes) - 19800000);
 }

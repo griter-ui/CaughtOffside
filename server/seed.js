@@ -5,6 +5,7 @@ const Match = require('./models/Match');
 const MatchComment = require('./models/MatchComment');
 
 const seedData = async () => {
+  const demoDate = (offset) => new Date(Date.now() + (offset * 86400000) + 19800000).toISOString().slice(0, 10);
   try {
     const userCount = await User.countDocuments();
     if (userCount > 0) {
@@ -229,12 +230,12 @@ const seedData = async () => {
     const match1 = await Match.create({
       hostId: player1._id,
       venueId: venue1._id,
-      date: '2026-09-15',
+      date: demoDate(1),
       timeSlot: '07:00 PM - 08:00 PM',
       format: '5v5',
       totalSpots: 10,
       pricePerSpot: 150,
-      notes: 'Competitive 5v5 Friday match! Need 3 more mid/defenders.',
+      notes: 'Competitive 5v5 demo match! Need 3 more mid/defenders.',
       acceptedPlayers: [player1._id, player2._id, player3._id, player4._id],
       pendingRequests: []
     });
@@ -242,7 +243,7 @@ const seedData = async () => {
     const match2 = await Match.create({
       hostId: player2._id,
       venueId: venue2._id,
-      date: '2026-09-18',
+      date: demoDate(3),
       timeSlot: '08:00 PM - 09:00 PM',
       format: '7v7',
       totalSpots: 14,
@@ -255,7 +256,7 @@ const seedData = async () => {
     const match3 = await Match.create({
       hostId: player3._id,
       venueId: venue3._id,
-      date: '2026-09-22',
+      date: demoDate(5),
       timeSlot: '06:00 PM - 07:00 PM',
       format: '5v5',
       totalSpots: 10,
@@ -268,7 +269,7 @@ const seedData = async () => {
     const match4 = await Match.create({
       hostId: player4._id,
       venueId: venue4._id,
-      date: '2026-09-25',
+      date: demoDate(7),
       timeSlot: '09:00 PM - 10:00 PM',
       format: '11-a-side',
       totalSpots: 22,
@@ -282,7 +283,7 @@ const seedData = async () => {
     const pastMatch1 = await Match.create({
       hostId: player1._id,
       venueId: venue1._id,
-      date: '2026-09-05',
+      date: demoDate(-3),
       timeSlot: '07:00 PM - 08:00 PM',
       format: '5v5',
       totalSpots: 10,
@@ -295,7 +296,7 @@ const seedData = async () => {
     const pastMatch2 = await Match.create({
       hostId: player2._id,
       venueId: venue2._id,
-      date: '2026-09-06',
+      date: demoDate(-1),
       timeSlot: '08:00 PM - 09:00 PM',
       format: '7v7',
       totalSpots: 14,
@@ -324,7 +325,7 @@ const seedData = async () => {
 
     console.log('Rich sample data seeded successfully!');
   } catch (error) {
-    console.error('Error seeding data:', error);
+    throw error;
   }
 };
 

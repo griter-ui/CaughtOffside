@@ -112,9 +112,10 @@ router.get('/me', authenticateToken, async (req, res) => {
 // PUT /api/auth/profile
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const updates = req.body;
-    delete updates.password; // Do not allow password update here
-    delete updates.email;
+    const editableFields = ['name', 'position', 'experienceLevel', 'preferredFoot', 'location', 'bio', 'availability', 'avatarUrl', 'skills', 'stats'];
+    const updates = Object.fromEntries(editableFields
+      .filter(field => Object.hasOwn(req.body, field))
+      .map(field => [field, req.body[field]]));
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,

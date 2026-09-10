@@ -4,34 +4,7 @@ const Venue = require('../models/Venue');
 const Booking = require('../models/Booking');
 const { authenticateToken } = require('../middleware/auth');
 
-// Helper to check if a slot has passed/expired in real time
-function isSlotExpired(dateStr, timeSlotStr) {
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
-
-  if (dateStr < todayStr) return true;
-  if (dateStr > todayStr) return false;
-
-  // Date is today! Check time component.
-  const parts = timeSlotStr.split(' - ');
-  if (parts.length < 2) return false;
-  const endTimeStr = parts[1].trim(); // e.g. "07:00 AM" or "05:00 PM"
-
-  const match = endTimeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return false;
-
-  let hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const modifier = match[3].toUpperCase();
-
-  if (modifier === 'PM' && hours < 12) hours += 12;
-  if (modifier === 'AM' && hours === 12) hours = 0;
-
-  const slotEndTime = new Date();
-  slotEndTime.setHours(hours, minutes, 0, 0);
-
-  return now >= slotEndTime;
-}
+const { DEFAULT_SLOTS, isValidDate, isSlotExpired } = require('../utils/slots');
 
 // GET /api/venues (Browse Venues with Filters)
 router.get('/', async (req, res) => {
@@ -81,30 +54,14 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/slots', async (req, res) => {
   try {
     const { date } = req.query;
-    if (!date) {
-      return res.status(400).json({ message: 'Date parameter is required.' });
+    if (!isValidDate(date)) {
+      return res.status(400).json({ message: 'A valid date in YYYY-MM-DD format is required.' });
     }
 
-    // Default slot times for turfs
-    const defaultSlots = [
-      '06:00 AM - 07:00 AM',
-      '07:00 AM - 08:00 AM',
-      '08:00 AM - 09:00 AM',
-      '09:00 AM - 10:00 AM',
-      '10:00 AM - 11:00 AM',
-      '04:00 PM - 05:00 PM',
-      '05:00 PM - 06:00 PM',
-      '06:00 PM - 07:00 PM',
-      '07:00 PM - 08:00 PM',
-      '08:00 PM - 09:00 PM',
-      '09:00 PM - 10:00 PM',
-      '10:00 PM - 11:00 PM'
-    ];
-
-    const bookings = await Booking.find({ venueId: req.params.id, date, paymentStatus: 'paid' });
+    const bookings = await Booking.find({ venueId: req.params.id, date });
     const bookedTimeSlots = bookings.map(b => b.timeSlot);
 
-    const slotGrid = defaultSlots.map(timeSlot => {
+    const slotGrid = DEFAULT_SLOTS.map(timeSlot => {
       const isBooked = bookedTimeSlots.includes(timeSlot);
       const expired = isSlotExpired(date, timeSlot);
 
@@ -124,9 +81,10 @@ router.get('/:id/slots', async (req, res) => {
 // POST /api/venues (Owner Listing Creation)
 router.post('/', authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== 'owner') return res.status(403).json({ message: 'Sign in with a turf owner account to list a venue.' });
     const { name, location, area, pricePerHour, sportType, description, amenities, photos } = req.body;
 
-    if (!name || !location || !pricePerHour) {
+    if (!name || !location || !Number.isFinite(Number(pricePerHour)) || Number(pricePerHour) <= 0) {
       return res.status(400).json({ message: 'Name, location, and pricePerHour are required.' });
     }
 

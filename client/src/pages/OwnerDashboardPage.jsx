@@ -28,7 +28,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
       const vData = await vRes.json();
       if (vRes.ok) {
         const filtered = (vData.venues || []).filter(
-          v => v.ownerId === currentUser._id || v.ownerId?._id === currentUser._id || !v.ownerId
+          v => v.ownerId === currentUser._id || v.ownerId?._id === currentUser._id
         );
         setMyVenues(filtered);
       }
@@ -124,6 +124,8 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     );
   }
 
+  if (currentUser.role !== 'owner') return <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Sign in with the Turf Owner demo account to manage venues.</p>;
+
   const totalRevenue = bookingsLog.reduce((sum, b) => sum + (b.price || 0), 0);
 
   return (
@@ -170,7 +172,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
         </div>
 
         <div className="card" style={{ borderLeft: '4px solid var(--gold-accent)' }}>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gross Earnings</div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Simulated Booking Value</div>
           <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--pitch-green)', marginTop: '0.25rem' }}>₹{totalRevenue}</div>
         </div>
       </div>
@@ -241,7 +243,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
                   <td style={{ padding: '1rem', fontWeight: '700', color: '#fff' }}>₹{b.price}</td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ background: 'rgba(0, 255, 135, 0.15)', color: 'var(--pitch-green)', padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
-                      PAID
+                      SIMULATED
                     </span>
                   </td>
                   <td style={{ padding: '1rem' }}>

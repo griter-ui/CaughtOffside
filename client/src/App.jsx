@@ -17,7 +17,7 @@ export default function App() {
 
   // Initialize Socket.io
   useEffect(() => {
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io();
     setSocket(newSocket);
 
     return () => {
@@ -124,6 +124,9 @@ export default function App() {
 
       {/* Main Page View Routing */}
       <main>
+        <div style={{ padding: '0.8rem 1rem', textAlign: 'center', background: 'rgba(0, 255, 135, 0.08)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          College project demo · Sample venues and shared demo accounts · Bookings and payments are simulated. No money is charged.
+        </div>
         {activeTab === 'venues' && (
           <VenuesPage socket={socket} currentUser={currentUser} />
         )}

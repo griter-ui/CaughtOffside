@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
       sortOption = { 'stats.motmCount': -1 };
     }
 
-    const players = await User.find(query).select('-password').sort(sortOption);
+    const players = await User.find(query).select('-password -email').sort(sortOption);
     res.json({ players });
   } catch (error) {
     console.error('Fetch players error:', error);
@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
 // GET /api/players/:id (Football Passport Card details)
 router.get('/:id', async (req, res) => {
   try {
-    const player = await User.findById(req.params.id).select('-password');
+    const player = await User.findById(req.params.id).select('-password -email');
     if (!player) {
       return res.status(404).json({ message: 'Player passport not found.' });
     }

@@ -3,14 +3,19 @@ const router = express.Router();
 const Booking = require('../models/Booking');
 const Venue = require('../models/Venue');
 const { authenticateToken } = require('../middleware/auth');
+const { DEFAULT_SLOTS, isValidDate, isSlotExpired } = require('../utils/slots');
 
 // POST /api/bookings (Conflict-Safe Booking Creation)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { venueId, date, timeSlot, price } = req.body;
+    const { venueId, date, timeSlot } = req.body;
 
     if (!venueId || !date || !timeSlot) {
       return res.status(400).json({ message: 'Venue, date, and time slot are required.' });
+    }
+
+    if (!isValidDate(date) || !DEFAULT_SLOTS.includes(timeSlot) || isSlotExpired(date, timeSlot)) {
+      return res.status(400).json({ message: 'Choose a valid, upcoming slot (India time).' });
     }
 
     const venue = await Venue.findById(venueId);
@@ -19,7 +24,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     // Check conflict
-    const existing = await Booking.findOne({ venueId, date, timeSlot, paymentStatus: 'paid' });
+    const existing = await Booking.findOne({ venueId, date, timeSlot });
     if (existing) {
       return res.status(409).json({ message: 'Slot has already been booked by another player. Please select a different time slot.' });
     }
@@ -31,8 +36,8 @@ router.post('/', authenticateToken, async (req, res) => {
       userId: req.user.userId,
       date,
       timeSlot,
-      price: price || venue.pricePerHour,
-      paymentStatus: 'paid',
+      price: venue.pricePerHour,
+      paymentStatus: 'simulated',
       receiptId
     });
 
@@ -48,7 +53,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     res.status(201).json({
-      message: 'Booking confirmed!',
+      message: 'Demo booking confirmed. No money was charged.',
       booking: populatedBooking
     });
   } catch (error) {
@@ -102,7 +107,7 @@ router.delete('/owner/:id', authenticateToken, async (req, res) => {
     const venueOwnerId = (booking.venueId?.ownerId?._id || booking.venueId?.ownerId || '').toString();
     const reqUserId = (req.user.userId || '').toString();
 
-    if (venueOwnerId && venueOwnerId !== reqUserId) {
+    if (!venueOwnerId || venueOwnerId !== reqUserId) {
       return res.status(403).json({ message: 'Unauthorized. Only the turf owner can remove this booking.' });
     }
 
@@ -148,7 +153,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       io.emit('slot_cancelled', { venueId, date, timeSlot });
     }
 
-    res.json({ message: 'Booking cancelled successfully. Refund processed and slot freed!' });
+    res.json({ message: 'Demo booking cancelled and slot freed. No money was charged or refunded.' });
   } catch (error) {
     console.error('Error cancelling booking:', error);
     res.status(500).json({ message: 'Error cancelling booking.', error: error.message });

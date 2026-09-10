@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 export default function SlotGrid({ venueId, onSelectSlot, selectedSlot, socket }) {
-  const getTodayISO = () => new Date().toISOString().split('T')[0];
+  const getTodayISO = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
   const [selectedDate, setSelectedDate] = useState(getTodayISO);
   const [slots, setSlots] = useState([]);
@@ -13,7 +13,7 @@ export default function SlotGrid({ venueId, onSelectSlot, selectedSlot, socket }
 
   // Generate Year options up to 2030
   const startYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 2030 - startYear + 1 }, (_, i) => startYear + i);
+  const yearOptions = Array.from({ length: 3 }, (_, i) => startYear + i);
 
   // Month names
   const monthNames = [

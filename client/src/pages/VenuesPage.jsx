@@ -93,10 +93,10 @@ export default function VenuesPage({ socket, currentUser }) {
         setBookingReceipt(data.booking);
         setPaymentStep('receipt');
       } else {
-        alert(data.message || 'Booking conflict or payment failed.');
+        alert(data.message || 'Booking conflict or demo booking failed.');
       }
     } catch (err) {
-      alert('Payment processing error.');
+      alert('Demo booking failed. Please try again.');
     } finally {
       setProcessingPayment(false);
     }
@@ -207,7 +207,7 @@ export default function VenuesPage({ socket, currentUser }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff' }}>
                 {paymentStep === 'slot' && '📅 Select Slot & Book Turf'}
-                {paymentStep === 'payment' && '💳 Instant Payment Gateway'}
+                {paymentStep === 'payment' && '💳 Demo Checkout'}
                 {paymentStep === 'receipt' && '✅ Booking Receipt Confirmed'}
               </h3>
               <button onClick={() => setActiveVenue(null)} style={{ background: 'none', color: 'var(--text-muted)', fontSize: '1.4rem' }}>
@@ -241,7 +241,7 @@ export default function VenuesPage({ socket, currentUser }) {
                       className="auth-btn"
                       onClick={() => setPaymentStep('payment')}
                     >
-                      Proceed to Pay ₹{activeVenue.pricePerHour} →
+                      Continue to Demo Checkout ₹{activeVenue.pricePerHour} →
                     </button>
                   </div>
                 )}
@@ -252,9 +252,9 @@ export default function VenuesPage({ socket, currentUser }) {
             {paymentStep === 'payment' && (
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>💳</div>
-                <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.25rem' }}>Secure Express Checkout</h4>
+                <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.25rem' }}>Simulated Checkout</h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                  Instant Razorpay & UPI Checkout for <b>{activeVenue.name}</b>
+                  No money is charged. Demo booking for <b>{activeVenue.name}</b>
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 'var(--radius-md)', textAlign: 'left', marginBottom: '1.5rem' }}>
@@ -267,7 +267,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     <span style={{ fontWeight: '700', color: 'var(--pitch-green)' }}>{selectedSlot.date} ({selectedSlot.timeSlot})</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', fontSize: '1.1rem', fontWeight: '800' }}>
-                    <span>Total Amount Payable:</span>
+                    <span>Simulated Amount:</span>
                     <span style={{ color: 'var(--pitch-green)' }}>₹{activeVenue.pricePerHour}</span>
                   </div>
                 </div>
@@ -286,7 +286,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     onClick={handleConfirmPay}
                     disabled={processingPayment}
                   >
-                    {processingPayment ? 'Processing Payment...' : `Pay ₹${activeVenue.pricePerHour} & Confirm Booking`}
+                    {processingPayment ? 'Creating demo booking...' : `Simulate ₹${activeVenue.pricePerHour} & Book`}
                   </button>
                 </div>
               </div>
@@ -314,7 +314,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     ⏰ Time Slot: {bookingReceipt.timeSlot}
                   </p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                    💳 Amount Paid: ₹{bookingReceipt.price} (Status: PAID)
+                    💳 Simulated Amount: ₹{bookingReceipt.price} (DEMO — no money charged)
                   </p>
                 </div>
 

@@ -6,7 +6,7 @@ const bookingSchema = new mongoose.Schema({
   date: { type: String, required: true }, // Format: YYYY-MM-DD
   timeSlot: { type: String, required: true }, // e.g., "07:00 PM - 08:00 PM"
   price: { type: Number, required: true },
-  paymentStatus: { type: String, enum: ['paid', 'pending', 'cancelled'], default: 'paid' },
+  paymentStatus: { type: String, enum: ['simulated', 'paid', 'pending', 'cancelled'], default: 'simulated' },
   receiptId: { type: String, required: true, unique: true },
   createdAt: { type: Date, default: Date.now }
 });

@@ -71,7 +71,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
   };
 
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this turf booking? Your slot will be freed and refund processed.')) return;
+    if (!window.confirm('Are you sure you want to cancel this turf booking? Your demo slot will be freed. No money was charged.')) return;
 
     const token = sessionStorage.getItem('token');
     try {
@@ -81,7 +81,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
       });
       const data = await res.json();
       if (res.ok) {
-        alert('🚫 Booking cancelled successfully. Refund processed and slot freed!');
+        alert('🚫 Booking cancelled successfully. Demo slot freed. No money was charged.');
         fetchBookingsData();
       } else {
         alert(data.message || 'Error cancelling booking.');
@@ -139,7 +139,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
         <div>📅 <b>Date:</b> {b.date}</div>
         <div style={{ marginTop: '0.2rem' }}>⏰ <b>Slot:</b> {b.timeSlot}</div>
         <div style={{ marginTop: '0.2rem', color: isPast ? 'var(--text-muted)' : 'var(--pitch-green)', fontWeight: '700' }}>
-          💰 Paid Amount: ₹{b.price}
+          💰 Simulated Amount: ₹{b.price}
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
           style={{ width: '100%', color: 'var(--fire-orange)', border: '1px solid var(--fire-orange)', fontSize: '0.8rem', padding: '0.45rem', justifyContent: 'center' }}
           onClick={() => handleCancelBooking(b._id)}
         >
-          🚫 Cancel Booking & Refund
+          🚫 Cancel Demo Booking
         </button>
       )}
     </div>
