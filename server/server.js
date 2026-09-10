@@ -13,7 +13,8 @@ if (isProduction && !process.env.MONGO_URI) {
   throw new Error('MONGO_URI is required for deployment. Set your MongoDB Atlas connection string.');
 }
 
-const seedData = require('./seed');
+require('./middleware/archivePlugin')(mongoose);
+const archiveSamples = require('./archiveSamples');
 
 const app = express();
 const server = http.createServer(app);
@@ -29,7 +30,7 @@ app.use(cors());
 app.use(express.json());
 app.get('/api/health', (req, res) => {
   const connected = mongoose.connection.readyState === 1;
-  res.status(connected ? 200 : 503).json({ status: connected ? 'ok' : 'unavailable', demo: true });
+  res.status(connected ? 200 : 503).json({ status: connected ? 'ok' : 'unavailable', bookingMode: 'pay_at_venue' });
 });
 
 // Pass io to app context so routes can emit events
@@ -100,7 +101,7 @@ async function startServer() {
     }
 
     // Seed sample data
-    if (process.env.SEED_DEMO_DATA === 'true') await seedData();
+    await archiveSamples();
     // Ensure the unique slot index exists before accepting concurrent bookings.
     await require('./models/Booking').init();
 

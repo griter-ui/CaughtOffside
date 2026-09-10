@@ -15,12 +15,18 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ message: 'Authentication required. No token provided.' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid or expired token.' });
     }
-    req.user = user;
-    next();
+    try {
+      const account = await require('../models/User').findById(user.userId);
+      if (!account) return res.status(401).json({ message: 'Please sign in with an active account.' });
+      req.user = { ...user, role: account.role };
+      next();
+    } catch {
+      res.status(503).json({ message: 'Unable to verify account. Please try again.' });
+    }
   });
 };
 

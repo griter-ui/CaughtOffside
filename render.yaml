@@ -16,7 +16,7 @@ services:
       - key: MONGO_URI
         sync: false
       - key: SEED_DEMO_DATA
-        value: 'true'
+        value: 'false'
       - key: ALLOW_MEMORY_DB
         value: 'false'
       - key: MONGOMS_DISABLE_POSTINSTALL

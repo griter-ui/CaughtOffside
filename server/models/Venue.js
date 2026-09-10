@@ -6,9 +6,9 @@ const venueSchema = new mongoose.Schema({
   area: { type: String, required: true },
   pricePerHour: { type: Number, required: true },
   sportType: { type: String, enum: ['5-a-side', '7-a-side', '11-a-side', 'Box Cricket & Football'], default: '5-a-side' },
-  rating: { type: Number, default: 4.8 },
+  rating: { type: Number, default: 0 },
   photos: [{ type: String }],
-  description: { type: String, default: 'Premium FIFA grade artificial turf with LED floodlights and changing rooms.' },
+  description: { type: String, default: '' },
   amenities: [{ type: String }],
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now }

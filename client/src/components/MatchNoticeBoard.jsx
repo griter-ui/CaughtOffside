@@ -69,7 +69,7 @@ export default function MatchNoticeBoard({ matchId, socket, currentUser, isAccep
     <div className="notice-board">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--pitch-green)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          📋 Match Notice Board (Squad Discussion)
+           Match Notice Board (Squad Discussion)
         </h4>
         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           {comments.length} Messages
@@ -86,7 +86,7 @@ export default function MatchNoticeBoard({ matchId, socket, currentUser, isAccep
             <div key={c._id || idx} className="comment-item">
               <div className="comment-header">
                 <span className="comment-author">
-                  ⚽ {c.userName} ({c.userPosition})
+                   {c.userName} ({c.userPosition})
                 </span>
                 <span className="comment-time">
                   {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -126,7 +126,7 @@ export default function MatchNoticeBoard({ matchId, socket, currentUser, isAccep
         </form>
       ) : (
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: '8px' }}>
-          🔒 Only accepted match players can post on the Notice Board.
+           Only accepted match players can post on the Notice Board.
         </p>
       )}
     </div>

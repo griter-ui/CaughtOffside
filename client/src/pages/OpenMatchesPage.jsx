@@ -75,7 +75,7 @@ export default function OpenMatchesPage({ socket, currentUser }) {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('⚽ Match hosted successfully! Open spots are live.');
+        alert(' Match hosted successfully! Open spots are live.');
         setIsHostModalOpen(false);
         fetchMatches();
       } else {
@@ -109,7 +109,7 @@ export default function OpenMatchesPage({ socket, currentUser }) {
     <div className="page-container">
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 className="page-title">⚡ Host a Match & Open Games</h1>
+          <h1 className="page-title"> Host a Match & Open Games</h1>
           <p className="page-subtitle">
             Need extra players for your turf game? Host a slot or join open games hosted by nearby footballers.
           </p>
@@ -177,24 +177,24 @@ export default function OpenMatchesPage({ socket, currentUser }) {
             return (
               <div key={m._id} className="card">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-                  <span style={{ background: 'rgba(0, 255, 135, 0.15)', color: 'var(--pitch-green)', padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '800' }}>
+                  <span style={{ background: 'rgba(194, 210, 173, 0.15)', color: 'var(--pitch-green)', padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600' }}>
                     {m.format}
                   </span>
                   <span style={{ fontSize: '0.8rem', color: !isFull ? 'var(--electric-cyan)' : 'var(--fire-orange)', fontWeight: '700' }}>
-                    {!isFull ? `🟢 ${registeredCount}/${m.totalSpots} Registered` : `🔴 ${m.totalSpots}/${m.totalSpots} Match Full`}
+                    {!isFull ? ` ${registeredCount}/${m.totalSpots} Registered` : ` ${m.totalSpots}/${m.totalSpots} Match Full`}
                   </span>
                 </div>
 
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff' }}>{m.venueId?.name || 'Turf Pitch'}</h3>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#fff' }}>{m.venueId?.name || 'Turf Pitch'}</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.75rem 0' }}>
-                  📍 {m.venueId?.location || 'Bangalore'}
+                   {m.venueId?.location || 'Bangalore'}
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.85rem' }}>
-                  <div>📅 <b>Date:</b> {m.date}</div>
-                  <div style={{ marginTop: '0.2rem' }}>⏰ <b>Time:</b> {m.timeSlot}</div>
+                  <div> <b>Date:</b> {m.date}</div>
+                  <div style={{ marginTop: '0.2rem' }}> <b>Time:</b> {m.timeSlot}</div>
                   <div style={{ marginTop: '0.2rem', color: 'var(--pitch-green)', fontWeight: '700' }}>
-                    💰 ₹{m.pricePerSpot} / spot
+                     ₹{m.pricePerSpot} / spot
                   </div>
                 </div>
 
@@ -202,7 +202,7 @@ export default function OpenMatchesPage({ socket, currentUser }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
                   <div>
                     <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff' }}>Host: {m.hostId?.name} ({m.hostId?.position || 'MF'})</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📍 {m.hostId?.location || 'Bangalore'}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}> {m.hostId?.location || 'Bangalore'}</div>
                   </div>
                 </div>
 
@@ -238,7 +238,7 @@ export default function OpenMatchesPage({ socket, currentUser }) {
         <div className="modal-overlay" onClick={() => setIsHostModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#fff' }}>⚽ Host an Open Match</h3>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '600', color: '#fff' }}> Host an Open Match</h3>
               <button onClick={() => setIsHostModalOpen(false)} style={{ background: 'none', color: 'var(--text-muted)', fontSize: '1.4rem' }}>✕</button>
             </div>
 
@@ -347,22 +347,22 @@ export default function OpenMatchesPage({ socket, currentUser }) {
         <div className="modal-overlay" onClick={() => setSelectedMatch(null)}>
           <div className="modal-content" style={{ maxWidth: '680px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff' }}>
-                ⚽ {selectedMatch.venueId?.name} ({selectedMatch.format})
+              <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#fff' }}>
+                 {selectedMatch.venueId?.name} ({selectedMatch.format})
               </h3>
               <button onClick={() => setSelectedMatch(null)} style={{ background: 'none', color: 'var(--text-muted)', fontSize: '1.4rem' }}>✕</button>
             </div>
 
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              📅 {selectedMatch.date} • ⏰ {selectedMatch.timeSlot} • 💰 ₹{selectedMatch.pricePerSpot}/spot
+               {selectedMatch.date} •  {selectedMatch.timeSlot} •  ₹{selectedMatch.pricePerSpot}/spot
             </p>
 
             <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem' }}>
               <h5 style={{ fontSize: '0.9rem', color: 'var(--pitch-green)', marginBottom: '0.5rem' }}>Accepted Squad Players ({selectedMatch.acceptedPlayers?.length}/{selectedMatch.totalSpots}):</h5>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {selectedMatch.acceptedPlayers?.map(p => (
-                  <span key={p._id} style={{ background: 'rgba(0, 255, 135, 0.15)', color: '#fff', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>
-                    ⚽ {p.name} ({p.position || 'MF'})
+                  <span key={p._id} style={{ background: 'rgba(194, 210, 173, 0.15)', color: '#fff', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>
+                     {p.name} ({p.position || 'MF'})
                   </span>
                 ))}
               </div>

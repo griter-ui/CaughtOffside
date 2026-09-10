@@ -74,7 +74,7 @@ export default function PlayerDirectoryPage({ currentUser }) {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('🤝 Connection request sent!');
+        alert(' Connection request sent!');
         setMyConnectionStatus(prev => ({ ...prev, [targetPlayerId]: 'pending' }));
       } else {
         alert(data.message || 'Error sending request.');
@@ -87,7 +87,7 @@ export default function PlayerDirectoryPage({ currentUser }) {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">🎴 Player Directory & Profile Cards</h1>
+        <h1 className="page-title"> Player Directory & Profile Cards</h1>
         <p className="page-subtitle">
           Discover local footballers, evaluate digital stat cards, and build your weekend squad network.
         </p>

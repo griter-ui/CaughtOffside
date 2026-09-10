@@ -117,7 +117,7 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
   if (!currentUser) {
     return (
       <div className="page-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>🔒 Sign In Required</h2>
+        <h2> Sign In Required</h2>
         <p style={{ color: 'var(--text-muted)', margin: '1rem 0' }}>
           Please sign in to access your Player Profile & Personal Hub.
         </p>
@@ -128,7 +128,7 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">👤 My Profile & Personal Hub</h1>
+        <h1 className="page-title"> My Profile & Personal Hub</h1>
         <p className="page-subtitle">
           Manage your player card, view turf slot receipts, manage hosted open games, connect with teammates, and list your turf grounds.
         </p>
@@ -140,21 +140,21 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
           className={`date-tab ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          🎴 Player Profile & Stats
+           Player Profile & Stats
         </button>
 
         <button
           className={`date-tab ${activeTab === 'bookings' ? 'active' : ''}`}
           onClick={() => setActiveTab('bookings')}
         >
-          🎟️ My Bookings & Games
+           My Bookings & Games
         </button>
 
         <button
           className={`date-tab ${activeTab === 'teammates' ? 'active' : ''}`}
           onClick={() => setActiveTab('teammates')}
         >
-          🤝 My Teammates ({connectionsData.acceptedFriends.length})
+           My Teammates ({connectionsData.acceptedFriends.length})
           {connectionsData.pendingIncoming.length > 0 && (
             <span style={{ marginLeft: '6px', background: 'var(--fire-orange)', color: '#fff', padding: '0.15rem 0.45rem', borderRadius: '10px', fontSize: '0.75rem' }}>
               {connectionsData.pendingIncoming.length}
@@ -166,7 +166,7 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
           className={`date-tab ${activeTab === 'turfs' ? 'active' : ''}`}
           onClick={() => setActiveTab('turfs')}
         >
-          🏟️ Manage My Turfs
+           Manage My Turfs
         </button>
       </div>
 
@@ -179,14 +179,14 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
               onClick={() => setProfileSubTab('card')}
               style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
             >
-              🎴 Profile Card Preview
+               Profile Card Preview
             </button>
             <button
               className={`date-tab ${profileSubTab === 'edit' ? 'active' : ''}`}
               onClick={() => setProfileSubTab('edit')}
               style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
             >
-              ✏️ Edit Details & Skill Attributes
+               Edit Details & Skill Attributes
             </button>
           </div>
 
@@ -199,7 +199,7 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
           {profileSubTab === 'edit' && (
             <div style={{ maxWidth: '640px', margin: '0 auto', background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
               <form onSubmit={handleSaveProfile}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff', marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#fff', marginBottom: '1.25rem' }}>
                   Player Details & Position Info
                 </h3>
 
@@ -259,14 +259,14 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
                 </div>
 
                 <h4 style={{ fontSize: '1rem', color: 'var(--pitch-green)', marginBottom: '1rem' }}>
-                  ⚡ Self-Rated Skill Ratings (1-99)
+                   Self-Rated Skill Ratings (1-99)
                 </h4>
 
                 {['pace', 'passing', 'shooting', 'defending', 'stamina'].map(sk => (
                   <div key={sk} style={{ marginBottom: '0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
                       <span style={{ textTransform: 'uppercase', fontWeight: '700' }}>{sk}</span>
-                      <span style={{ color: '#fff', fontWeight: '800' }}>{formData.skills[sk]}</span>
+                      <span style={{ color: '#fff', fontWeight: '600' }}>{formData.skills[sk]}</span>
                     </div>
                     <input
                       type="range"
@@ -283,7 +283,7 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
                 ))}
 
                 <h4 style={{ fontSize: '1rem', color: 'var(--electric-cyan)', margin: '1.25rem 0 1rem 0' }}>
-                  🏆 Self-Reported Match Metrics
+                   Self-Reported Match Metrics
                 </h4>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -327,16 +327,16 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
           {/* Pending Requests */}
           {connectionsData.pendingIncoming.length > 0 && (
             <div style={{ marginBottom: '2rem', background: 'rgba(255, 94, 54, 0.08)', border: '1px solid var(--fire-orange)', padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--fire-orange)', marginBottom: '1rem' }}>
-                📩 Pending Incoming Requests ({connectionsData.pendingIncoming.length})
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--fire-orange)', marginBottom: '1rem' }}>
+                 Pending Incoming Requests ({connectionsData.pendingIncoming.length})
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {connectionsData.pendingIncoming.map(item => (
                   <div key={item.connectionId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.5rem' }}>⚽</span>
+                      <span style={{ fontSize: '1.5rem' }}></span>
                       <div>
-                        <div style={{ fontWeight: '800', color: '#fff' }}>{item.user?.name}</div>
+                        <div style={{ fontWeight: '600', color: '#fff' }}>{item.user?.name}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                           Pos: {item.user?.position} • {item.user?.location}
                         </div>
@@ -365,8 +365,8 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
           )}
 
           {/* Accepted Connections Network */}
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff', marginBottom: '1rem' }}>
-            🤝 Accepted Teammates Network ({connectionsData.acceptedFriends.length})
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>
+             Accepted Teammates Network ({connectionsData.acceptedFriends.length})
           </h3>
 
           {loadingConns ? (
@@ -379,15 +379,15 @@ export default function ProfilePage({ socket, currentUser, onUpdateUser }) {
             <div className="grid-layout">
               {connectionsData.acceptedFriends.map(f => (
                 <div key={f._id} className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ background: 'rgba(0, 255, 135, 0.15)', color: 'var(--pitch-green)', width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.9rem' }}>
+                  <div style={{ background: 'rgba(194, 210, 173, 0.15)', color: 'var(--pitch-green)', width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.9rem' }}>
                     {f.position || 'MF'}
                   </div>
                   <div>
-                    <div style={{ fontWeight: '800', color: '#fff', fontSize: '1.05rem' }}>{f.name}</div>
+                    <div style={{ fontWeight: '600', color: '#fff', fontSize: '1.05rem' }}>{f.name}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--pitch-green)', fontWeight: '700' }}>
                       {f.position} • {f.experienceLevel?.toUpperCase()}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📍 {f.location}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}> {f.location}</div>
                   </div>
                 </div>
               ))}

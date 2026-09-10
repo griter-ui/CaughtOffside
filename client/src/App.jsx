@@ -57,8 +57,8 @@ export default function App() {
       {/* Top Navbar */}
       <nav className="navbar">
         <div className="brand-logo" onClick={() => setActiveTab('venues')} style={{ cursor: 'pointer' }}>
-          <div className="brand-icon">⚽</div>
-          <span>CAUGHTOFFSIDE</span>
+          <div className="brand-icon" aria-hidden="true">CO.</div>
+          <span>CaughtOffside</span>
         </div>
 
         <ul className="nav-links">
@@ -67,7 +67,7 @@ export default function App() {
               className={`nav-btn ${activeTab === 'venues' ? 'active' : ''}`}
               onClick={() => setActiveTab('venues')}
             >
-              🏟️ Venues
+               Venues
             </button>
           </li>
           <li>
@@ -75,7 +75,7 @@ export default function App() {
               className={`nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
               onClick={() => setActiveTab('matches')}
             >
-              ⚡ Open Games
+               Find a game
             </button>
           </li>
           <li>
@@ -83,7 +83,7 @@ export default function App() {
               className={`nav-btn ${activeTab === 'players' ? 'active' : ''}`}
               onClick={() => setActiveTab('players')}
             >
-              🎴 Player Directory
+               Player Directory
             </button>
           </li>
 
@@ -93,7 +93,7 @@ export default function App() {
                 className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`}
                 onClick={() => setActiveTab('profile')}
               >
-                👤 My Profile & Hub
+                 My profile
               </button>
             </li>
           )}
@@ -101,7 +101,7 @@ export default function App() {
           {currentUser ? (
             <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.85rem', borderRadius: '20px', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--pitch-green)', fontWeight: '800' }}>{currentUser.position || 'MF'}</span>
+                <span style={{ color: 'var(--pitch-green)', fontWeight: '600' }}>{currentUser.position || 'MF'}</span>
                 <span style={{ color: '#fff', fontWeight: '700' }}>{currentUser.name}</span>
               </div>
               <button
@@ -115,7 +115,7 @@ export default function App() {
           ) : (
             <li>
               <button className="auth-btn" onClick={() => setIsAuthModalOpen(true)}>
-                Sign In / Sign Up
+                Sign in
               </button>
             </li>
           )}
@@ -124,9 +124,6 @@ export default function App() {
 
       {/* Main Page View Routing */}
       <main>
-        <div style={{ padding: '0.8rem 1rem', textAlign: 'center', background: 'rgba(0, 255, 135, 0.08)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-          College project demo · Sample venues and shared demo accounts · Bookings and payments are simulated. No money is charged.
-        </div>
         {activeTab === 'venues' && (
           <VenuesPage socket={socket} currentUser={currentUser} />
         )}

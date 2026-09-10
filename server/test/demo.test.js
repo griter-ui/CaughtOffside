@@ -15,6 +15,10 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 before(async () => {
   // This database is created only for the test; the user's .env database is never used.
   database = await MongoMemoryServer.create();
+  const mongoose = require('mongoose');
+  await mongoose.connect(database.getUri('demo_test'));
+  await require('../seed')();
+  await mongoose.disconnect();
   const reservation = net.createServer().listen(0, '127.0.0.1');
   await once(reservation, 'listening');
   const port = reservation.address().port;
@@ -60,8 +64,19 @@ test('dates reject invalid days and use India time at slot start', () => {
   assert.equal(isSlotExpired('2026-09-10', '06:00 AM - 07:00 AM', new Date('2026-09-10T00:30:00Z')), true);
 });
 
-test('demo booking, permissions, concurrency and real-time events', { timeout: 30000 }, async () => {
-  const login = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email: 'rohan@gmail.com', password: 'password123' }) });
+test('sample archive, signup, reservations, permissions and real-time events', { timeout: 30000 }, async () => {
+  assert.deepEqual((await api('/venues')).body.venues, []);
+  assert.deepEqual((await api('/players')).body.players, []);
+  const oldLogin = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email: 'rohan@gmail.com', password: 'password123' }) });
+  assert.equal(oldLogin.status, 400);
+  const signup = await api('/auth/signup', { method: 'POST', body: JSON.stringify({ name: 'Test Player', email: 'player@example.test', password: 'test-password-123' }) });
+  assert.equal(signup.status, 201);
+  assert.equal(signup.body.user.stats.matchesPlayed, 0);
+  const owner = await api('/auth/signup', { method: 'POST', body: JSON.stringify({ name: 'Test Owner', email: 'owner@example.test', password: 'test-password-123', role: 'owner' }) });
+  assert.equal(owner.status, 201);
+  const listing = await api('/venues', { token: owner.body.token, method: 'POST', body: JSON.stringify({ name: 'Test Ground', location: 'Bangalore', pricePerHour: 900 }) });
+  assert.equal(listing.status, 201);
+  const login = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email: 'player@example.test', password: 'test-password-123' }) });
   assert.equal(login.status, 200);
   const token = login.body.token;
   const players = await api('/players');
@@ -73,7 +88,7 @@ test('demo booking, permissions, concurrency and real-time events', { timeout: 3
   const denied = await api('/venues', { token, method: 'POST', body: JSON.stringify({ name: 'No', location: 'Bangalore', pricePerHour: 500 }) });
   assert.equal(denied.status, 403);
   const venues = await api('/venues');
-  assert.equal(venues.body.venues.length, 6);
+  assert.equal(venues.body.venues.length, 1);
   const venue = venues.body.venues[0];
   const date = new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10);
   const booking = { venueId: venue._id, date, timeSlot: '07:00 PM - 08:00 PM', price: 1 };
@@ -89,7 +104,7 @@ test('demo booking, permissions, concurrency and real-time events', { timeout: 3
   assert.deepEqual(attempts.map(result => result.status).sort(), [201, 409]);
   const created = attempts.find(result => result.status === 201).body.booking;
   assert.equal(created.price, venue.pricePerHour);
-  assert.equal(created.paymentStatus, 'simulated');
+  assert.equal(created.paymentStatus, 'pay_at_venue');
   assert.equal((await bookedEvent)[0].venueId, venue._id);
   const slots = await api(`/venues/${venue._id}/slots?date=${date}`);
   assert.equal(slots.body.slots.find(slot => slot.timeSlot === booking.timeSlot).status, 'booked');

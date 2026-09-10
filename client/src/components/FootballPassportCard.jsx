@@ -30,29 +30,29 @@ export default function FootballPassportCard({ player, onConnect, isConnected, i
 
       <h3 className="player-name">{name}</h3>
       <p className="player-meta">
-        📍 {location} • {experienceLevel.toUpperCase()} • {preferredFoot} Foot
+         {location} • {experienceLevel.toUpperCase()} • {preferredFoot} Foot
       </p>
 
       {/* Radar Skill Stats Grid */}
       <div className="skills-grid">
         <div className="skill-stat">
-          <span className="skill-name">⚡ PAC</span>
+          <span className="skill-name"> PAC</span>
           <span className="skill-val">{skills.pace}</span>
         </div>
         <div className="skill-stat">
-          <span className="skill-name">🎯 PAS</span>
+          <span className="skill-name"> PAS</span>
           <span className="skill-val">{skills.passing}</span>
         </div>
         <div className="skill-stat">
-          <span className="skill-name">⚽ SHO</span>
+          <span className="skill-name"> SHO</span>
           <span className="skill-val">{skills.shooting}</span>
         </div>
         <div className="skill-stat">
-          <span className="skill-name">🛡️ DEF</span>
+          <span className="skill-name"> DEF</span>
           <span className="skill-val">{skills.defending}</span>
         </div>
         <div className="skill-stat" style={{ gridColumn: 'span 2' }}>
-          <span className="skill-name">🫁 STAMINA</span>
+          <span className="skill-name"> STAMINA</span>
           <span className="skill-val">{skills.stamina}</span>
         </div>
       </div>
@@ -86,12 +86,12 @@ export default function FootballPassportCard({ player, onConnect, isConnected, i
       {onConnect && (
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
           {isConnected ? (
-            <button className="nav-btn" style={{ width: '100%', background: 'rgba(0,255,135,0.15)', color: '#00ff87', cursor: 'default' }}>
+            <button className="nav-btn" style={{ width: '100%', background: 'rgba(194, 210, 173,0.15)', color: '#c2d2ad', cursor: 'default' }}>
               ✓ Connected
             </button>
           ) : isPending ? (
             <button className="nav-btn" style={{ width: '100%', opacity: 0.6, cursor: 'default' }}>
-              ⏳ Request Pending
+               Request Pending
             </button>
           ) : (
             <button

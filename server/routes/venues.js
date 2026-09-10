@@ -94,8 +94,8 @@ router.post('/', authenticateToken, async (req, res) => {
       area: area || location.split(',')[0],
       pricePerHour: Number(pricePerHour),
       sportType: sportType || '5-a-side',
-      description: description || 'High performance turf with floodlights and spectator seating.',
-      amenities: amenities || ['LED Floodlights', 'Bibs Provided', 'Changing Rooms', 'Drinking Water', 'Free Parking'],
+      description: description || '',
+      amenities: amenities || [],
       photos: photos || ['https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800'],
       ownerId: req.user.userId
     });

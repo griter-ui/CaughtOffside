@@ -37,7 +37,7 @@ router.post('/', authenticateToken, async (req, res) => {
       date,
       timeSlot,
       price: venue.pricePerHour,
-      paymentStatus: 'simulated',
+      paymentStatus: 'pay_at_venue',
       receiptId
     });
 
@@ -53,7 +53,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     res.status(201).json({
-      message: 'Demo booking confirmed. No money was charged.',
+      message: 'Reservation confirmed. Payment is arranged directly with the venue.',
       booking: populatedBooking
     });
   } catch (error) {
@@ -153,7 +153,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       io.emit('slot_cancelled', { venueId, date, timeSlot });
     }
 
-    res.json({ message: 'Demo booking cancelled and slot freed. No money was charged or refunded.' });
+    res.json({ message: 'Reservation cancelled and slot freed.' });
   } catch (error) {
     console.error('Error cancelling booking:', error);
     res.status(500).json({ message: 'Error cancelling booking.', error: error.message });

@@ -115,7 +115,7 @@ export default function SlotGrid({ venueId, onSelectSlot, selectedSlot, socket }
   return (
     <div className="slot-grid-container">
       <h4 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-        📅 Select Date & Time Slot (Bookings open through 2030)
+         Select Date & Time Slot (Bookings open through 2030)
       </h4>
 
       {/* Year, Month, Day Dropdowns */}
@@ -203,7 +203,7 @@ export default function SlotGrid({ venueId, onSelectSlot, selectedSlot, socket }
 
       {/* Selected Date Summary */}
       <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--pitch-green)', marginBottom: '1rem' }}>
-        📅 Booking Date Selected: {selectedDate}
+         Booking Date Selected: {selectedDate}
       </div>
 
       {/* Slots Grid */}
@@ -234,14 +234,14 @@ export default function SlotGrid({ venueId, onSelectSlot, selectedSlot, socket }
                 <span>{s.timeSlot}</span>
                 <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
                   {isExpired
-                    ? '⏳ Past / Expired'
+                    ? ' Past / Expired'
                     : isBooked
-                    ? '❌ Booked'
+                    ? ' Booked'
                     : isSelected
                     ? '✓ Selected'
                     : isSocketLocked
-                    ? '🔒 Locking...'
-                    : '🟢 Available'}
+                    ? ' Locking...'
+                    : ' Available'}
                 </span>
               </button>
             );

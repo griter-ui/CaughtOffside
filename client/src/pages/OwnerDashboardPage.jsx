@@ -65,7 +65,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('🚫 Booking removed by owner. Time slot freed successfully!');
+        alert(' Booking removed by owner. Time slot freed successfully!');
         fetchOwnerData();
       } else {
         alert(data.message || 'Error removing booking.');
@@ -93,7 +93,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('🏟️ Turf Venue listing published! It is now instantly available for everyone to book.');
+        alert(' Turf Venue listing published! It is now instantly available for everyone to book.');
         setIsAddModalOpen(false);
         setNewVenue({
           name: '',
@@ -116,7 +116,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
   if (!currentUser) {
     return (
       <div className="page-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <h2>🏟️ Manage My Turf Venues</h2>
+        <h2> Manage My Turf Venues</h2>
         <p style={{ color: 'var(--text-muted)', margin: '1rem 0' }}>
           Please sign in to list and manage your artificial turf grounds.
         </p>
@@ -124,7 +124,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     );
   }
 
-  if (currentUser.role !== 'owner') return <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Sign in with the Turf Owner demo account to manage venues.</p>;
+  if (currentUser.role !== 'owner') return <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Create a venue owner account to list and manage your grounds.</p>;
 
   const totalRevenue = bookingsLog.reduce((sum, b) => sum + (b.price || 0), 0);
 
@@ -133,7 +133,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
       {!embedMode ? (
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 className="page-title">🏟️ Turf Management Portal</h1>
+            <h1 className="page-title"> Turf Management Portal</h1>
             <p className="page-subtitle">
               List your own artificial turf ground, manage slot pricing, and track incoming player bookings.
             </p>
@@ -148,7 +148,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
         </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#fff' }}>🏟️ Turf Listings & Owner Portal</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff' }}> Turf Listings & Owner Portal</h3>
           <button
             className="auth-btn"
             style={{ padding: '0.55rem 1.1rem', fontSize: '0.85rem' }}
@@ -163,23 +163,23 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
         <div className="card" style={{ borderLeft: '4px solid var(--pitch-green)' }}>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>My Turf Listings</div>
-          <div style={{ fontSize: '2rem', fontWeight: '800', color: '#fff', marginTop: '0.25rem' }}>{myVenues.length}</div>
+          <div style={{ fontSize: '2rem', fontWeight: '600', color: '#fff', marginTop: '0.25rem' }}>{myVenues.length}</div>
         </div>
 
         <div className="card" style={{ borderLeft: '4px solid var(--electric-cyan)' }}>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Player Bookings Received</div>
-          <div style={{ fontSize: '2rem', fontWeight: '800', color: '#fff', marginTop: '0.25rem' }}>{bookingsLog.length}</div>
+          <div style={{ fontSize: '2rem', fontWeight: '600', color: '#fff', marginTop: '0.25rem' }}>{bookingsLog.length}</div>
         </div>
 
         <div className="card" style={{ borderLeft: '4px solid var(--gold-accent)' }}>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Simulated Booking Value</div>
-          <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--pitch-green)', marginTop: '0.25rem' }}>₹{totalRevenue}</div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Reservation value</div>
+          <div style={{ fontSize: '2rem', fontWeight: '600', color: 'var(--pitch-green)', marginTop: '0.25rem' }}>₹{totalRevenue}</div>
         </div>
       </div>
 
       {/* Venues Management Section */}
-      <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff', marginBottom: '1rem' }}>
-        🏟️ Your Active Turf Listings
+      <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>
+         Your Active Turf Listings
       </h3>
 
       {loading ? (
@@ -199,8 +199,8 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
-              <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff' }}>{v.name}</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.85rem 0' }}>📍 {v.location}</p>
+              <h4 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#fff' }}>{v.name}</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.85rem 0' }}> {v.location}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--pitch-green)', fontWeight: '700' }}>
                 <span>Format: {v.sportType}</span>
                 <span>₹{v.pricePerHour}/hr</span>
@@ -211,8 +211,8 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
       )}
 
       {/* Booked Slots Transaction Log Table */}
-      <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff', marginBottom: '1rem' }}>
-        📜 Recent Booking Transactions Log
+      <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>
+         Recent Booking Transactions Log
       </h3>
 
       {bookingsLog.length === 0 ? (
@@ -242,8 +242,8 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
                   <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{b.date} ({b.timeSlot})</td>
                   <td style={{ padding: '1rem', fontWeight: '700', color: '#fff' }}>₹{b.price}</td>
                   <td style={{ padding: '1rem' }}>
-                    <span style={{ background: 'rgba(0, 255, 135, 0.15)', color: 'var(--pitch-green)', padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
-                      SIMULATED
+                    <span style={{ background: 'rgba(194, 210, 173, 0.15)', color: 'var(--pitch-green)', padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                      PAY AT VENUE
                     </span>
                   </td>
                   <td style={{ padding: '1rem' }}>
@@ -252,7 +252,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
                       style={{ color: 'var(--fire-orange)', border: '1px solid var(--fire-orange)', padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
                       onClick={() => handleOwnerRemoveBooking(b._id, b.userId?.name)}
                     >
-                      🚫 Remove Booking
+                       Remove Booking
                     </button>
                   </td>
                 </tr>
@@ -267,7 +267,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff' }}>🏟️ Add New Turf Venue</h3>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#fff' }}> Add New Turf Venue</h3>
               <button onClick={() => setIsAddModalOpen(false)} style={{ background: 'none', color: 'var(--text-muted)', fontSize: '1.4rem' }}>✕</button>
             </div>
 

@@ -93,10 +93,10 @@ export default function VenuesPage({ socket, currentUser }) {
         setBookingReceipt(data.booking);
         setPaymentStep('receipt');
       } else {
-        alert(data.message || 'Booking conflict or demo booking failed.');
+        alert(data.message || 'Booking conflict or reservation failed.');
       }
     } catch (err) {
-      alert('Demo booking failed. Please try again.');
+      alert('Reservation failed. Please try again.');
     } finally {
       setProcessingPayment(false);
     }
@@ -104,24 +104,25 @@ export default function VenuesPage({ socket, currentUser }) {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">🏟️ Browse Turf Venues</h1>
+      <div className="page-header venue-header">
+        <p className="eyebrow">BANGALORE / THE LOCAL GAME</p>
+        <h1 className="page-title">Find your next pitch.</h1>
         <p className="page-subtitle">
-          Find & book artificial turf pitches across the city with real-time conflict-safe slot locking.
+          A quick five-a-side or a full evening under the lights. Find a ground, pick a time, bring your team.
         </p>
       </div>
 
       {/* Filter Toolbar */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', background: 'var(--bg-card)', padding: '1.25rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+      <div className="venue-filters">
         <input
           type="text"
-          placeholder="Search by venue name, location, area..."
+          aria-label="Search venues" placeholder="Search a ground or neighbourhood"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{ flex: '1 1 240px', padding: '0.75rem 1rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
         />
 
-        <select
+        <select aria-label="Game format"
           value={selectedSport}
           onChange={(e) => setSelectedSport(e.target.value)}
           style={{ flex: '0 0 160px', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
@@ -135,7 +136,7 @@ export default function VenuesPage({ socket, currentUser }) {
 
         <input
           type="number"
-          placeholder="Max Price ₹/hr"
+          aria-label="Maximum hourly price" placeholder="Budget / hour"
           value={maxPrice}
           onChange={(e) => setMaxPrice(e.target.value)}
           style={{ flex: '0 0 140px', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
@@ -149,29 +150,31 @@ export default function VenuesPage({ socket, currentUser }) {
         </div>
       ) : availableVenuesToBook.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)' }}>
-          No open venues available for booking. (Your owned turfs are managed under "Manage My Turfs" inside My Profile & Hub!)
+          {searchQuery || maxPrice || selectedSport !== 'All'
+            ? 'No grounds match these filters. Try another neighbourhood, format or budget.'
+            : 'No grounds listed yet. Create a venue owner account, then add your first ground from My profile → Manage My Turfs.'}
         </div>
       ) : (
-        <div className="grid-layout">
+        <div className="venue-results"><div className="results-heading"><span>{availableVenuesToBook.length} grounds to play</span><span>Times shown in IST</span></div><div className="grid-layout venue-grid">
           {availableVenuesToBook.map(v => (
-            <div key={v._id} className="card">
+            <div key={v._id} className="card venue-card">
               <div style={{ height: '180px', margin: '-1.5rem -1.5rem 1rem -1.5rem', overflow: 'hidden', position: 'relative' }}>
                 <img
                   src={v.photos?.[0] || 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800'}
                   alt={v.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-                <span style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(9, 13, 22, 0.85)', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '800', color: 'var(--pitch-green)', backdropFilter: 'blur(8px)' }}>
-                  ★ {v.rating}
+                <span style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(9, 13, 22, 0.85)', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', color: 'var(--pitch-green)', backdropFilter: 'blur(8px)' }}>
+                  {v.rating > 0 ? `★ ${v.rating}` : 'New ground'}
                 </span>
-                <span style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(0, 255, 135, 0.9)', color: '#000', padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800' }}>
+                <span style={{ position: 'absolute', bottom: '10px', left: '10px', background: '#e2e8dd', color: '#000', padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
                   {v.sportType}
                 </span>
               </div>
 
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#fff' }}>{v.name}</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff' }}>{v.name}</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.85rem 0' }}>
-                📍 {v.location}
+                 {v.location}
               </p>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem' }}>
@@ -184,7 +187,7 @@ export default function VenuesPage({ socket, currentUser }) {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                 <div>
-                  <span style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--pitch-green)' }}>₹{v.pricePerHour}</span>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '600', color: 'var(--pitch-green)' }}>₹{v.pricePerHour}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}> / hour</span>
                 </div>
                 <button
@@ -192,12 +195,12 @@ export default function VenuesPage({ socket, currentUser }) {
                   style={{ fontSize: '0.85rem', padding: '0.55rem 1.1rem' }}
                   onClick={() => handleOpenBookingModal(v)}
                 >
-                  Book Slot
+                  View slots
                 </button>
               </div>
             </div>
           ))}
-        </div>
+        </div></div>
       )}
 
       {/* Booking & Payment Modal */}
@@ -205,10 +208,10 @@ export default function VenuesPage({ socket, currentUser }) {
         <div className="modal-overlay" onClick={() => setActiveVenue(null)}>
           <div className="modal-content" style={{ maxWidth: '640px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff' }}>
-                {paymentStep === 'slot' && '📅 Select Slot & Book Turf'}
-                {paymentStep === 'payment' && '💳 Demo Checkout'}
-                {paymentStep === 'receipt' && '✅ Booking Receipt Confirmed'}
+              <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#fff' }}>
+                {paymentStep === 'slot' && ' Select Slot & Book Turf'}
+                {paymentStep === 'payment' && ' Reservation'}
+                {paymentStep === 'receipt' && ' Booking Receipt Confirmed'}
               </h3>
               <button onClick={() => setActiveVenue(null)} style={{ background: 'none', color: 'var(--text-muted)', fontSize: '1.4rem' }}>
                 ✕
@@ -219,7 +222,7 @@ export default function VenuesPage({ socket, currentUser }) {
             {paymentStep === 'slot' && (
               <div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                  📍 {activeVenue.location} • ₹{activeVenue.pricePerHour}/hr
+                   {activeVenue.location} • ₹{activeVenue.pricePerHour}/hr
                 </p>
 
                 <SlotGrid
@@ -230,10 +233,10 @@ export default function VenuesPage({ socket, currentUser }) {
                 />
 
                 {selectedSlot && (
-                  <div style={{ marginTop: '1.5rem', background: 'rgba(0, 255, 135, 0.08)', border: '1px solid var(--pitch-green)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ marginTop: '1.5rem', background: 'rgba(194, 210, 173, 0.08)', border: '1px solid var(--pitch-green)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Selected Time Slot</div>
-                      <div style={{ fontSize: '1rem', fontWeight: '800', color: '#fff' }}>
+                      <div style={{ fontSize: '1rem', fontWeight: '600', color: '#fff' }}>
                         {selectedSlot.date} | {selectedSlot.timeSlot}
                       </div>
                     </div>
@@ -241,7 +244,7 @@ export default function VenuesPage({ socket, currentUser }) {
                       className="auth-btn"
                       onClick={() => setPaymentStep('payment')}
                     >
-                      Continue to Demo Checkout ₹{activeVenue.pricePerHour} →
+                      Continue to Reservation ₹{activeVenue.pricePerHour} →
                     </button>
                   </div>
                 )}
@@ -251,10 +254,9 @@ export default function VenuesPage({ socket, currentUser }) {
             {/* STEP 2: Payment Checkout */}
             {paymentStep === 'payment' && (
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>💳</div>
-                <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.25rem' }}>Simulated Checkout</h4>
+                <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.25rem' }}>Review your reservation</h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                  No money is charged. Demo booking for <b>{activeVenue.name}</b>
+                  Payment is arranged directly with the venue. Reservation for <b>{activeVenue.name}</b>
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 'var(--radius-md)', textAlign: 'left', marginBottom: '1.5rem' }}>
@@ -266,8 +268,8 @@ export default function VenuesPage({ socket, currentUser }) {
                     <span style={{ color: 'var(--text-muted)' }}>Date & Slot:</span>
                     <span style={{ fontWeight: '700', color: 'var(--pitch-green)' }}>{selectedSlot.date} ({selectedSlot.timeSlot})</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', fontSize: '1.1rem', fontWeight: '800' }}>
-                    <span>Simulated Amount:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', fontSize: '1.1rem', fontWeight: '600' }}>
+                    <span>Venue fee:</span>
                     <span style={{ color: 'var(--pitch-green)' }}>₹{activeVenue.pricePerHour}</span>
                   </div>
                 </div>
@@ -286,7 +288,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     onClick={handleConfirmPay}
                     disabled={processingPayment}
                   >
-                    {processingPayment ? 'Creating demo booking...' : `Simulate ₹${activeVenue.pricePerHour} & Book`}
+                    {processingPayment ? 'Reserving...' : `Reserve this slot`}
                   </button>
                 </div>
               </div>
@@ -295,26 +297,23 @@ export default function VenuesPage({ socket, currentUser }) {
             {/* STEP 3: Printable Receipt Confirmation */}
             {paymentStep === 'receipt' && bookingReceipt && (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ background: 'rgba(0, 255, 135, 0.15)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto', fontSize: '2rem' }}>
-                  ✅
-                </div>
-                <h4 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#fff' }}>Booking Confirmed!</h4>
+                <h4 style={{ fontSize: '1.4rem', fontWeight: '600', color: '#fff' }}>Booking Confirmed!</h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
                   Receipt Reference: <b style={{ color: 'var(--pitch-green)' }}>{bookingReceipt.receiptId}</b>
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', border: '2px dashed var(--pitch-green)', padding: '1.5rem', borderRadius: 'var(--radius-md)', textAlign: 'left', marginBottom: '1.5rem' }}>
-                  <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#fff', marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#fff', marginBottom: '0.75rem' }}>
                     {bookingReceipt.venueId?.name || activeVenue.name}
                   </div>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                    📅 Date: {bookingReceipt.date}
+                     Date: {bookingReceipt.date}
                   </p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                    ⏰ Time Slot: {bookingReceipt.timeSlot}
+                     Time Slot: {bookingReceipt.timeSlot}
                   </p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                    💳 Simulated Amount: ₹{bookingReceipt.price} (DEMO — no money charged)
+                     Venue fee: ₹{bookingReceipt.price} (pay at venue)
                   </p>
                 </div>
 
@@ -323,7 +322,7 @@ export default function VenuesPage({ socket, currentUser }) {
                   style={{ width: '100%', padding: '0.85rem' }}
                   onClick={() => setActiveVenue(null)}
                 >
-                  Done / View My Bookings
+                  Done
                 </button>
               </div>
             )}

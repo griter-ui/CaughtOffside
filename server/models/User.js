@@ -15,14 +15,14 @@ const userSchema = new mongoose.Schema({
     defending: { type: Number, min: 1, max: 99, default: 65 },
     stamina: { type: Number, min: 1, max: 99, default: 80 }
   },
-  bio: { type: String, default: 'Passionate football player looking for good weekend matches.' },
-  location: { type: String, default: 'Indiranagar, Bangalore' },
+  bio: { type: String, default: '' },
+  location: { type: String, default: '' },
   availability: { type: String, default: 'Weekends & Evening slots' },
   stats: {
-    matchesPlayed: { type: Number, default: 12 },
-    tournamentsWon: { type: Number, default: 2 },
-    motmCount: { type: Number, default: 3 },
-    gearBoughtSold: { type: Number, default: 4 }
+    matchesPlayed: { type: Number, default: 0 },
+    tournamentsWon: { type: Number, default: 0 },
+    motmCount: { type: Number, default: 0 },
+    gearBoughtSold: { type: Number, default: 0 }
   },
   avatarUrl: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }

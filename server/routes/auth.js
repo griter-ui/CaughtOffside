@@ -30,8 +30,8 @@ router.post('/signup', async (req, res) => {
       position: position || 'MF',
       experienceLevel: experienceLevel || 'intermediate',
       preferredFoot: preferredFoot || 'Right',
-      location: location || 'Indiranagar, Bangalore',
-      bio: bio || 'Football enthusiast ready for weekend games!',
+      location: location || '',
+      bio: bio || '',
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`
     });
 
