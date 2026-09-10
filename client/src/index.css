@@ -1,0 +1,563 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Football Turf & Stadium Theme Palette */
+  --bg-dark: #040d07;
+  --bg-pitch: #081a10;
+  --bg-card: #0b2215;
+  --bg-card-hover: #12311f;
+  --bg-input: #08180e;
+  
+  --pitch-green: #00ff87;
+  --pitch-green-dark: #00b359;
+  --turf-lime: #a6ff00;
+  --stadium-gold: #ffd700;
+  --electric-cyan: #00e5ff;
+  --fire-orange: #ff5e36;
+  
+  --text-main: #f0faf4;
+  --text-muted: #84a893;
+  --text-dim: #517360;
+  
+  --border-color: rgba(0, 255, 135, 0.18);
+  --border-highlight: rgba(0, 255, 135, 0.45);
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  
+  --font-main: 'Outfit', 'Inter', -apple-system, sans-serif;
+  --shadow-glow: 0 0 25px rgba(0, 255, 135, 0.25);
+  --shadow-card: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Playground Grassy Turf Background */
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  background-image: 
+    /* Grass Stripe Lawn Pattern */
+    repeating-linear-gradient(90deg, rgba(0, 255, 135, 0.02) 0px, rgba(0, 255, 135, 0.02) 80px, transparent 80px, transparent 160px),
+    /* Stadium Corner Floodlights */
+    radial-gradient(circle at 10% -10%, rgba(0, 255, 135, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 90% -10%, rgba(166, 255, 0, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(0, 229, 255, 0.1) 0%, transparent 50%),
+    /* Deep Stadium Pitch Base Gradient */
+    linear-gradient(180deg, #030805 0%, #081d11 40%, #0d2c1b 70%, #040905 100%);
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Decorative Football Field Center Circle & Touchlines */
+body::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  border: 2px dashed rgba(0, 255, 135, 0.04);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 140px;
+  border-bottom: 2px solid rgba(0, 255, 135, 0.03);
+  border-left: 2px solid rgba(0, 255, 135, 0.03);
+  border-right: 2px solid rgba(0, 255, 135, 0.03);
+  pointer-events: none;
+  z-index: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--font-main);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-main);
+}
+
+/* Custom Pitch Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: #0f3620;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 135, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pitch-green);
+}
+
+/* Navbar with Pitch Touchline Accent */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: rgba(6, 18, 11, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 2px solid rgba(0, 255, 135, 0.35);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, var(--pitch-green) 60%, var(--turf-lime) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--pitch-green) 0%, var(--turf-lime) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-size: 1.3rem;
+  font-weight: 900;
+  box-shadow: 0 0 20px rgba(0, 255, 135, 0.5);
+  border: 1px solid #fff;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  list-style: none;
+}
+
+.nav-btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  color: #fff;
+  background: rgba(0, 255, 135, 0.12);
+  border-color: rgba(0, 255, 135, 0.35);
+  box-shadow: 0 0 15px rgba(0, 255, 135, 0.15);
+}
+
+.auth-btn {
+  background: linear-gradient(135deg, var(--pitch-green) 0%, #00cc6a 60%, var(--turf-lime) 100%);
+  color: #030805;
+  font-weight: 800;
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 20px rgba(0, 255, 135, 0.35);
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.auth-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 30px rgba(0, 255, 135, 0.55);
+}
+
+/* Page Containers */
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  position: relative;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed rgba(0, 255, 135, 0.15);
+}
+
+.page-title {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  margin-top: 0.4rem;
+}
+
+/* Football Player Stat Card Styling */
+.passport-card {
+  width: 330px;
+  background: linear-gradient(145deg, #112d1c 0%, #08170e 100%);
+  border: 2px solid rgba(0, 255, 135, 0.4);
+  border-radius: 26px;
+  padding: 1.6rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 135, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Card Goalpost Border Top Accent */
+.passport-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, var(--turf-lime), var(--pitch-green), var(--electric-cyan));
+}
+
+.passport-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 255, 135, 0.35);
+  border-color: var(--pitch-green);
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.rating-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.4rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 135, 0.3);
+}
+
+.ovr-number {
+  font-size: 2.9rem;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, var(--pitch-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.position-tag {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--pitch-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.player-name {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.player-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  background: rgba(4, 13, 7, 0.6);
+  padding: 0.9rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(0, 255, 135, 0.15);
+}
+
+.skill-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.skill-name {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.skill-val {
+  font-weight: 900;
+  color: #fff;
+}
+
+.stat-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.stat-pill {
+  background: rgba(0, 255, 135, 0.05);
+  border-radius: 12px;
+  padding: 0.55rem 0.2rem;
+  border: 1px solid rgba(0, 255, 135, 0.2);
+}
+
+.stat-num {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--pitch-green);
+}
+
+.stat-lbl {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Grids & Cards */
+.grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: linear-gradient(145deg, #0e2718 0%, #07170d 100%);
+  border: 1.5px solid rgba(0, 255, 135, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Goalpost Top Bar Border Effect on Cards */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--pitch-green), transparent);
+  opacity: 0.6;
+}
+
+.card:hover {
+  border-color: var(--pitch-green);
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 255, 135, 0.25);
+}
+
+/* Slot Grid Styling */
+.slot-grid-container {
+  margin-top: 1.5rem;
+}
+
+.date-tabs {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.date-tab {
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: 700;
+  text-align: center;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.date-tab:hover, .date-tab.active {
+  background: rgba(0, 255, 135, 0.15);
+  border-color: var(--pitch-green);
+  color: var(--pitch-green);
+  box-shadow: 0 0 15px rgba(0, 255, 135, 0.2);
+}
+
+.slots-flex {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.slot-btn {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.slot-btn.available {
+  border-color: rgba(0, 255, 135, 0.35);
+  color: #fff;
+  background: linear-gradient(145deg, #0d2919 0%, #07170e 100%);
+}
+
+.slot-btn.available:hover {
+  background: var(--pitch-green);
+  color: #030805;
+  border-color: var(--pitch-green);
+  box-shadow: 0 0 20px var(--pitch-green-glow);
+  font-weight: 800;
+}
+
+.slot-btn.selected {
+  background: linear-gradient(135deg, var(--pitch-green) 0%, var(--turf-lime) 100%);
+  color: #030805;
+  font-weight: 900;
+  border-color: #fff;
+  box-shadow: 0 0 25px rgba(0, 255, 135, 0.5);
+}
+
+.slot-btn.booked {
+  opacity: 0.4;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: not-allowed;
+  border-color: transparent;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 9, 5, 0.88);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: linear-gradient(145deg, #0e2918 0%, #07190e 100%);
+  border: 2px solid var(--border-highlight);
+  border-radius: var(--radius-xl);
+  padding: 2.2rem;
+  max-width: 560px;
+  width: 100%;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 255, 135, 0.2);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Match Notice Board */
+.notice-board {
+  background: rgba(4, 14, 8, 0.7);
+  border: 1px solid rgba(0, 255, 135, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.comment-item {
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  margin-bottom: 0.75rem;
+  border-left: 3.5px solid var(--pitch-green);
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.comment-author {
+  font-weight: 800;
+  color: var(--pitch-green);
+  font-size: 0.9rem;
+}
+
+.comment-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  color: var(--text-main);
+}

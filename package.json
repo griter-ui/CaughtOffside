@@ -1,0 +1,26 @@
+{
+  "name": "football-passport-platform",
+  "version": "1.0.0",
+  "description": "Full-Stack MERN Football Passport, Turf Booking & Matchmaking Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "server": "node server/server.js",
+    "client": "npm run dev --prefix client",
+    "dev": "node server/server.js",
+    "build": "npm run build --prefix client",
+    "start": "node server/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb-memory-server": "^11.2.0",
+    "mongoose": "^9.9.4",
+    "socket.io": "^4.8.3"
+  }
+}
