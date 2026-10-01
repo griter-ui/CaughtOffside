@@ -1,3 +1,5 @@
+// Owner workspace: display this account's grounds, create listings and inspect/cancel
+// their reservations. Backend ownership checks remain authoritative for each write.
 import React, { useState, useEffect } from 'react';
 
 export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
@@ -17,6 +19,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     photos: 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800'
   });
 
+  // Two data sources: public venues filtered locally, then protected owner booking log.
   const fetchOwnerData = async () => {
     const token = sessionStorage.getItem('token');
     if (!token) return;
@@ -54,8 +57,9 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     }
   }, [currentUser]);
 
+  // UI confirmation precedes DELETE; the API verifies ownership of the booking's venue.
   const handleOwnerRemoveBooking = async (bookingId, playerName) => {
-    if (!window.confirm(`Are you sure you want to cancel and remove ${playerName || 'this player'}'s booking? The slot will be freed.`)) return;
+    if (!window.confirm(`Cancel ${playerName || 'this player'}'s booking? Any linked hosted match will also be cancelled and the slot will be freed.`)) return;
 
     const token = sessionStorage.getItem('token');
     try {
@@ -75,6 +79,8 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     }
   };
 
+  // Convert the one-photo draft string to the schema's array shape; the backend
+  // supplies ownerId, validates price/required fields and emits venue_created.
   const handleCreateVenue = async (e) => {
     e.preventDefault();
     const token = sessionStorage.getItem('token');
@@ -126,6 +132,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
 
   if (currentUser.role !== 'owner') return <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Create a venue owner account to list and manage your grounds.</p>;
 
+  // Sum reservation values, not collected revenue: this app does not process payment.
   const totalRevenue = bookingsLog.reduce((sum, b) => sum + (b.price || 0), 0);
 
   return (
@@ -210,7 +217,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
         </div>
       )}
 
-      {/* Booked Slots Transaction Log Table */}
+      {/* Reservation log uses populated venue/player fields; it is not a payment ledger. */}
       <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>
          Recent Booking Transactions Log
       </h3>

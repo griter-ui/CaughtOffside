@@ -1,29 +1,23 @@
+// Discover games, publish a Match, request to join, and open its discussion board.
+// Hosting reserves turf and publishes the game atomically via routes/matches.js.
 import React, { useState, useEffect } from 'react';
-import FootballPassportCard from '../components/FootballPassportCard';
+import HostMatchModal from '../components/HostMatchModal';
 import MatchNoticeBoard from '../components/MatchNoticeBoard';
 import { isMatchExpired } from '../utils/dateUtils';
 
 export default function OpenMatchesPage({ socket, currentUser }) {
   const [matches, setMatches] = useState([]);
-  const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState('All');
 
-  // Modal for Host a Match
   const [isHostModalOpen, setIsHostModalOpen] = useState(false);
-  const [hostFormData, setHostFormData] = useState({
-    venueId: '',
-    date: new Date().toISOString().split('T')[0],
-    timeSlot: '07:00 PM - 08:00 PM',
-    format: '5v5',
-    totalSpots: 10,
-    pricePerSpot: 150,
-    notes: ''
-  });
+  const [hostSuccess, setHostSuccess] = useState('');
 
-  // Modal for Match Details & Notice Board
+  // Selected object is a snapshot, separate from matches. Refetching the list alone
+  // does not refresh an already-open modal's selectedMatch object.
   const [selectedMatch, setSelectedMatch] = useState(null);
 
+  // GET filters by format. The rendered list also hides expired and self-hosted games.
   const fetchMatches = async () => {
     setLoading(true);
     try {
@@ -39,53 +33,16 @@ export default function OpenMatchesPage({ socket, currentUser }) {
     }
   };
 
-  const fetchVenuesList = async () => {
-    try {
-      const res = await fetch('/api/venues');
-      const data = await res.json();
-      if (res.ok) {
-        setVenues(data.venues || []);
-        if (data.venues.length > 0) {
-          setHostFormData(prev => ({ ...prev, venueId: data.venues[0]._id }));
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     fetchMatches();
-    fetchVenuesList();
-  }, [selectedFormat]);
+    const refresh = () => fetchMatches();
+    socket?.on('match_updated', refresh);
+    socket?.on('connect', refresh);
+    return () => { socket?.off('match_updated', refresh); socket?.off('connect', refresh); };
+  }, [selectedFormat, socket]);
 
-  const handleHostMatchSubmit = async (e) => {
-    e.preventDefault();
-    const token = sessionStorage.getItem('token');
-    if (!token) return alert('Please login to host a match.');
-
-    try {
-      const res = await fetch('/api/matches', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(hostFormData)
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert(' Match hosted successfully! Open spots are live.');
-        setIsHostModalOpen(false);
-        fetchMatches();
-      } else {
-        alert(data.message || 'Error hosting match.');
-      }
-    } catch (err) {
-      alert('Error hosting match.');
-    }
-  };
-
+  // Ask to join: the server adds a pending user, not an accepted player.
+  // Host approval is a separate handler on MyBookingsPage.
   const handleRequestJoin = async (matchId) => {
     const token = sessionStorage.getItem('token');
     if (!token) return alert('Please login to join matches.');
@@ -105,6 +62,8 @@ export default function OpenMatchesPage({ socket, currentUser }) {
     }
   };
 
+  // Render format controls, match cards, the host form and selected-match board.
+  // React conditions determine visibility; the API must enforce permissions itself.
   return (
     <div className="page-container">
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -127,6 +86,7 @@ export default function OpenMatchesPage({ socket, currentUser }) {
         </button>
       </div>
 
+      {hostSuccess && <p role="status" style={{ padding: '1rem', color: 'var(--pitch-green)', background: 'var(--bg-card)', marginBottom: '1rem', borderRadius: '8px' }}>{hostSuccess}</p>}
       {/* Filter Tabs */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem' }}>
         {['All', '5v5', '7v7', '11-a-side'].map(fmt => (
@@ -191,10 +151,11 @@ export default function OpenMatchesPage({ socket, currentUser }) {
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                  <div style={{ color: 'var(--pitch-green)', marginBottom: '0.4rem' }}>Turf slot reserved · Pay venue directly</div>
                   <div> <b>Date:</b> {m.date}</div>
                   <div style={{ marginTop: '0.2rem' }}> <b>Time:</b> {m.timeSlot}</div>
                   <div style={{ marginTop: '0.2rem', color: 'var(--pitch-green)', fontWeight: '700' }}>
-                     ₹{m.pricePerSpot} / spot
+                     ₹{m.pricePerSpot} / spot (arrange with host)
                   </div>
                 </div>
 
@@ -233,114 +194,11 @@ export default function OpenMatchesPage({ socket, currentUser }) {
         );
       })()}
 
-      {/* Host a Match Modal */}
-      {isHostModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsHostModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '600', color: '#fff' }}> Host an Open Match</h3>
-              <button onClick={() => setIsHostModalOpen(false)} style={{ background: 'none', color: 'var(--text-muted)', fontSize: '1.4rem' }}>✕</button>
-            </div>
-
-            <form onSubmit={handleHostMatchSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Select Turf Venue</label>
-                <select
-                  value={hostFormData.venueId}
-                  onChange={(e) => setHostFormData({ ...hostFormData, venueId: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                  required
-                >
-                  {venues.map(v => (
-                    <option key={v._id} value={v._id}>{v.name} ({v.location})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Date</label>
-                  <input
-                    type="date"
-                    value={hostFormData.date}
-                    onChange={(e) => setHostFormData({ ...hostFormData, date: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Time Slot</label>
-                  <input
-                    type="text"
-                    value={hostFormData.timeSlot}
-                    onChange={(e) => setHostFormData({ ...hostFormData, timeSlot: e.target.value })}
-                    placeholder="07:00 PM - 08:00 PM"
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Format</label>
-                  <select
-                    value={hostFormData.format}
-                    onChange={(e) => {
-                      const fmt = e.target.value;
-                      let defaultSpots = 10;
-                      if (fmt === '7v7') defaultSpots = 14;
-                      if (fmt === '11-a-side') defaultSpots = 22;
-                      setHostFormData({ ...hostFormData, format: fmt, totalSpots: defaultSpots });
-                    }}
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                  >
-                    <option value="5v5">5v5</option>
-                    <option value="7v7">7v7</option>
-                    <option value="11-a-side">11-a-side</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Total Spots</label>
-                  <input
-                    type="number"
-                    value={hostFormData.totalSpots}
-                    onChange={(e) => setHostFormData({ ...hostFormData, totalSpots: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Price / Spot ₹</label>
-                  <input
-                    type="number"
-                    value={hostFormData.pricePerSpot}
-                    onChange={(e) => setHostFormData({ ...hostFormData, pricePerSpot: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Match Notes</label>
-                <textarea
-                  value={hostFormData.notes}
-                  onChange={(e) => setHostFormData({ ...hostFormData, notes: e.target.value })}
-                  placeholder="e.g. Competitive game, bring bibs if available..."
-                  rows={3}
-                  style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                />
-              </div>
-
-              <button type="submit" className="auth-btn" style={{ width: '100%', padding: '0.85rem' }}>
-                Publish Hosted Match
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {isHostModalOpen && <HostMatchModal socket={socket} onClose={() => setIsHostModalOpen(false)} onHosted={match => {
+        setIsHostModalOpen(false);
+        setHostSuccess(`Turf reserved! Your match on ${match.date} at ${match.timeSlot} is in My Bookings & Games. Pay the venue directly.`);
+        fetchMatches();
+      }} />}
 
       {/* Match Details & Notice Board Modal */}
       {selectedMatch && (

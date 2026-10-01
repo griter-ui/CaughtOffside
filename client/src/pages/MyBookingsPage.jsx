@@ -1,3 +1,5 @@
+// Personal history hub: reservations, games hosted, and squads joined are separate lists.
+// embedMode lets ProfilePage reuse this view without duplicating the outer page header.
 import React, { useState, useEffect } from 'react';
 import MatchNoticeBoard from '../components/MatchNoticeBoard';
 import { isMatchExpired } from '../utils/dateUtils';
@@ -12,6 +14,8 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
   // Selected Match for notice board inside joined/hosted
   const [selectedNoticeMatch, setSelectedNoticeMatch] = useState(null);
 
+  // Read two protected APIs: /bookings/my-bookings and /matches/my-matches.
+  // Identity comes from the token; the backend chooses which records belong to it.
   const fetchBookingsData = async () => {
     const token = sessionStorage.getItem('token');
     if (!token) return;
@@ -45,8 +49,14 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
     if (currentUser) {
       fetchBookingsData();
     }
-  }, [currentUser]);
+    const refresh = () => { if (currentUser) fetchBookingsData(); };
+    socket?.on('match_updated', refresh);
+    socket?.on('connect', refresh);
+    return () => { socket?.off('match_updated', refresh); socket?.off('connect', refresh); };
+  }, [currentUser, socket]);
 
+  // The host sends an applicant ID + decision, then reloads the dashboard.
+  // The server independently verifies that this caller owns the requested match.
   const handleRespondMatchRequest = async (matchId, playerId, action) => {
     const token = sessionStorage.getItem('token');
     try {
@@ -70,8 +80,10 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
     }
   };
 
+  // Confirm in the UI, then delete the caller's reservation through its protected route.
+  // Success refetches history; the backend also broadcasts that the slot is free.
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this turf booking? Your slot will be freed. No money was charged.')) return;
+    if (!window.confirm('Are you sure you want to cancel this turf booking? Your slot will be freed and any linked hosted match will be cancelled. No money was charged.')) return;
 
     const token = sessionStorage.getItem('token');
     try {
@@ -102,16 +114,18 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
     );
   }
 
-  // Partition arrays into Upcoming vs Past
+  // Display grouping uses END time; the booking API rejects new reservations at START.
+  // These filters do not update a Match's stored status to completed.
   const upcomingBookings = bookings.filter(b => !isMatchExpired(b.date, b.timeSlot));
   const pastBookings = bookings.filter(b => isMatchExpired(b.date, b.timeSlot));
 
-  const upcomingHosted = hostedMatches.filter(m => !isMatchExpired(m.date, m.timeSlot));
-  const pastHosted = hostedMatches.filter(m => isMatchExpired(m.date, m.timeSlot));
+  const upcomingHosted = hostedMatches.filter(m => m.status !== 'cancelled' && !isMatchExpired(m.date, m.timeSlot));
+  const pastHosted = hostedMatches.filter(m => m.status === 'cancelled' || isMatchExpired(m.date, m.timeSlot));
 
-  const upcomingJoined = joinedMatches.filter(m => !isMatchExpired(m.date, m.timeSlot));
-  const pastJoined = joinedMatches.filter(m => isMatchExpired(m.date, m.timeSlot));
+  const upcomingJoined = joinedMatches.filter(m => m.status !== 'cancelled' && !isMatchExpired(m.date, m.timeSlot));
+  const pastJoined = joinedMatches.filter(m => m.status === 'cancelled' || isMatchExpired(m.date, m.timeSlot));
 
+  // Saved reservation card: populated venue, receipt and cancellation control.
   const renderBookingCard = (b, isPast = false) => (
     <div key={b._id} className="card" style={{ opacity: isPast ? 0.75 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
@@ -143,18 +157,23 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
         </div>
       </div>
 
+      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+        Payment: {b.paymentStatus === 'pay_at_venue' ? 'Pay the venue directly' : b.paymentStatus}
+        {b.matchId && ' · Linked to your hosted match'}
+      </p>
       {!isPast && (
         <button
           className="nav-btn"
           style={{ width: '100%', color: 'var(--fire-orange)', border: '1px solid var(--fire-orange)', fontSize: '0.8rem', padding: '0.45rem', justifyContent: 'center' }}
           onClick={() => handleCancelBooking(b._id)}
         >
-           Cancel booking
+           {b.matchId ? 'Cancel booking & hosted match' : 'Cancel booking'}
         </button>
       )}
     </div>
   );
 
+  // Host view adds applicant decisions and accepted-squad details to the match card.
   const renderHostedMatchCard = (m, isPast = false) => (
     <div key={m._id} className="card" style={{ opacity: isPast ? 0.8 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -171,7 +190,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
               fontSize: '0.7rem',
               fontWeight: '600'
             }}>
-              {isPast ? ' PAST HOSTED GAME' : ' ACTIVE MATCH'}
+              {m.status === 'cancelled' ? ' CANCELLED' : !m.bookingId ? ' NO TURF RESERVATION' : isPast ? ' PAST HOSTED GAME' : ' TURF RESERVED'}
             </span>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -189,7 +208,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
       </div>
 
       {/* Pending Player Join Approvals (Only for upcoming matches) */}
-      {!isPast && m.pendingRequests?.length > 0 && (
+      {!isPast && m.bookingId && m.status !== 'cancelled' && m.pendingRequests?.length > 0 && (
         <div style={{ background: 'rgba(255, 94, 54, 0.08)', border: '1px solid var(--fire-orange)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>
           <h5 style={{ fontSize: '0.9rem', color: 'var(--fire-orange)', marginBottom: '0.75rem' }}>
              Pending Player Requests to Join ({m.pendingRequests.length}):
@@ -241,6 +260,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
     </div>
   );
 
+  // Participant view shows accepted membership and discussion, without host controls.
   const renderJoinedMatchCard = (m, isPast = false) => (
     <div key={m._id} className="card" style={{ opacity: isPast ? 0.8 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -257,7 +277,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
               fontSize: '0.7rem',
               fontWeight: '600'
             }}>
-              {isPast ? ' PAST MATCH PLAYED' : ' UPCOMING MATCH'}
+              {m.status === 'cancelled' ? ' CANCELLED' : isPast ? ' PAST MATCH PLAYED' : ' UPCOMING MATCH'}
             </span>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -390,7 +410,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
               {pastHosted.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                     Past Hosted Games History ({pastHosted.length})
+                     Past & Cancelled Hosted Games ({pastHosted.length})
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {pastHosted.map(m => renderHostedMatchCard(m, true))}
@@ -431,7 +451,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
               {pastJoined.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                     Past Games Played History ({pastJoined.length})
+                     Past & Cancelled Squads ({pastJoined.length})
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {pastJoined.map(m => renderJoinedMatchCard(m, true))}

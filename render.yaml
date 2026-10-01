@@ -1,3 +1,5 @@
+# Deployment recipe: install dependencies/build React, then run the Express entry point.
+# This file describes configuration; it is not evidence that a remote deployment is healthy.
 services:
   - type: web
     name: caughtoffside-demo
@@ -5,16 +7,19 @@ services:
     plan: free
     buildCommand: npm ci && npm ci --prefix client --include=dev && npm run build
     startCommand: npm start
+    # The backend reports MongoDB connection readiness on this route.
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
         value: '24'
+      # Keep secrets server-side. Use Atlas (transactions required for match reservations).
       - key: JWT_SECRET
         generateValue: true
       - key: MONGO_URI
         sync: false
+      # Retained configuration flag; current server startup does not call seed.js.
       - key: SEED_DEMO_DATA
         value: 'false'
       - key: ALLOW_MEMORY_DB
