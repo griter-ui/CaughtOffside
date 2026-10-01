@@ -1,0 +1,5 @@
+[
+  { "value": "5v5", "legacySportType": "5-a-side", "spots": 10 },
+  { "value": "7v7", "legacySportType": "7-a-side", "spots": 14 },
+  { "value": "11-a-side", "legacySportType": "11-a-side", "spots": 22 }
+]

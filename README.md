@@ -50,6 +50,16 @@ Older match listings without a booking remain in history but are excluded from d
 
 The new booking service is in `server/services/matchBookings.js`; the host form is `client/src/components/HostMatchModal.jsx`. The API retains `POST /api/matches`: send either `{ venueId, date, timeSlot }` or `{ bookingId }`, plus optional `format`, `totalSpots`, `pricePerSpot`, `notes`, and `hostingRequestId`. A retry ID identifies one submission and must change if its details change.
 
+## Formats offered by a turf
+
+Owners select one or more **Supported football formats** when listing a turf: `5v5`, `7v7`, and `11-a-side`. Use **Manage My Turfs → Edit formats** to update an existing listing. The hourly price and slot inventory are shared across formats; selecting a different format does not make an occupied slot available.
+
+Both venue booking and match hosting display only the selected turf's formats. A 7v7-only turf offers only 7v7. Reservations store the chosen `format` and display it in the receipt, player history, and owner booking log. Hosting from a reservation must keep its recorded format. Removing a format from a listing preserves existing receipts but prevents new bookings or newly hosted matches in that format.
+
+The server enforces these choices independently of the interface. `POST /api/venues` accepts a nonempty `formats` array; `PATCH /api/venues/:id/formats` allows only the venue's owner to update it. `POST /api/bookings` and `POST /api/matches` accept `format`. If the turf offers multiple formats, a choice is required. A single-format turf can infer the only available choice for older clients. Venue discovery accepts canonical formats and historical `sportType` filter names.
+
+Existing `5-a-side`, `7-a-side`, and `11-a-side` listings are interpreted as their original single format without a destructive migration. A historical `Box Cricket & Football` label does not specify team size: its owner must choose football formats before new reservations can be made. Shared definitions live in `shared/footballFormats.json`; frontend and backend helpers use the same mapping.
+
 ## Existing starter data
 
 A startup migration archives the original sample accounts that still match their seeded name, email and password, along with their starter venues, related matches and simulated reservations. These are excluded from app queries; documents are not deleted. New accounts and their listings remain available. Archived accounts cannot authenticate, including with older tokens.

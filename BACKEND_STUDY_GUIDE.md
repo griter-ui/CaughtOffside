@@ -129,6 +129,8 @@ Open [Match.js](server/models/Match.js), then [routes/matches.js](server/routes/
 - Follow schedule, capacity, contribution, ownership and action validation. Conditional writes check pending applicants and enforce squad capacity even during concurrent approvals. Legacy unreserved listings cannot receive new joins.
 - **Checkpoint:** explain why a failed Match write rolls back the Booking, and why cancelling a turf reservation also withdraws its game.
 
+- Follow `shared/footballFormats.json` through `server/utils/venueFormats.js`: a venue advertises a set of formats, while a booking snapshots exactly one. Both booking and hosting validate the submitted format. A host using a reservation must keep that reservation's format. Owner-only format edits change future choices without rewriting existing receipts; the unique slot index stays independent of format.
+
 ### 12. Comment model + comment routes + sockets — persistence versus delivery
 
 Open [MatchComment.js](server/models/MatchComment.js), the last two routes in [routes/matches.js](server/routes/matches.js), then revisit Socket.IO in [server.js](server/server.js).

@@ -7,10 +7,11 @@ const Venue = require('../models/Venue');
 const { cancelBooking, sendBookingError } = require('../services/matchBookings');
 const { authenticateToken } = require('../middleware/auth');
 const { DEFAULT_SLOTS, isValidDate, isSlotExpired } = require('../utils/slots');
+const { selectBookingFormat } = require('../utils/venueFormats');
 
 // POST /api/bookings - Conflict-Safe Turf Reservation Creation
 // 1. Trigger: Slot selection & "Confirm Pay at Venue Booking" button (BookingModal.jsx) via POST /api/bookings
-// 2. Input: req.params: none | req.query: none | req.body: { venueId, date, timeSlot } | req.user: { userId, role, ... } (verified caller)
+// 2. Input: req.body: { venueId, date, timeSlot, format }; verified req.user supplies identity.
 // 3. Permission: Login required (authenticateToken).
 // 4. Rules: Validates presence of venueId/date/timeSlot; validates date via isValidDate(); checks slot in DEFAULT_SLOTS; verifies slot is not expired (isSlotExpired). Early duplicate check via Booking.findOne. Missing rules: max active bookings per player cap.
 // 5. Storage: Booking model (new record saved). Database enforces compound unique index on { venueId, date, timeSlot } preventing race conditions.
@@ -32,6 +33,7 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!venue) {
       return res.status(404).json({ message: 'Venue not found.' });
     }
+    const format = selectBookingFormat(venue, req.body.format);
 
     // Friendly early conflict check. This alone is not race-safe: overlapping
     // requests can both pass it. MongoDB's unique slot index is the final guard.
@@ -50,6 +52,7 @@ router.post('/', authenticateToken, async (req, res) => {
       userId: req.user.userId,
       date,
       timeSlot,
+      format,
       price: venue.pricePerHour,
       paymentStatus: 'pay_at_venue',
       receiptId
@@ -59,7 +62,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // populate replaces a reference with selected venue details in this response;
     // it does not duplicate all those details into the stored booking document.
-    const populatedBooking = await Booking.findById(booking._id).populate('venueId', 'name location sportType photos');
+    const populatedBooking = await Booking.findById(booking._id).populate('venueId', 'name location sportType formats photos');
 
     // Broadcast only after a successful save. MongoDB is durable; the socket event
     // is a live UI hint and is not a replacement for refetching after a reconnect.
@@ -73,6 +76,7 @@ router.post('/', authenticateToken, async (req, res) => {
       booking: populatedBooking
     });
   } catch (error) {
+    if (error.status) return res.status(error.status).json({ message: error.message });
     // A concurrent insert losing the unique-index race reaches this branch.
     // Any duplicate key is mapped here, including a rare receiptId collision.
     if (error.code === 11000) {
@@ -93,7 +97,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/my-bookings', authenticateToken, async (req, res) => {
   try {
     const bookings = await Booking.find({ userId: req.user.userId })
-      .populate('venueId', 'name location sportType pricePerHour photos')
+      .populate('venueId', 'name location sportType formats pricePerHour photos')
       .sort({ createdAt: -1 });
 
     res.json({ bookings });

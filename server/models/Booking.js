@@ -6,6 +6,8 @@ const bookingSchema = new mongoose.Schema({
   venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue', required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   matchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Match' },
+  // Snapshot the player's chosen format; owner edits do not rewrite receipts.
+  format: { type: String, enum: require('../utils/venueFormats').FORMATS },
   date: { type: String, required: true }, // Format: YYYY-MM-DD
   timeSlot: { type: String, required: true }, // e.g., "07:00 PM - 08:00 PM"
   // Snapshot of the venue price when booked; later listing-price edits do not change it.

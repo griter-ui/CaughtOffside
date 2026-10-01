@@ -150,6 +150,7 @@ export default function MyBookingsPage({ socket, currentUser, embedMode = false 
       </p>
 
       <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+        {b.format && <div><b>Format:</b> {b.format}</div>}
         <div> <b>Date:</b> {b.date}</div>
         <div style={{ marginTop: '0.2rem' }}> <b>Slot:</b> {b.timeSlot}</div>
         <div style={{ marginTop: '0.2rem', color: isPast ? 'var(--text-muted)' : 'var(--pitch-green)', fontWeight: '700' }}>

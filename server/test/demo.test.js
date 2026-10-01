@@ -222,3 +222,114 @@ test('a failed match write rolls back its reservation', async t => {
     await mongoose.disconnect();
   }
 });
+
+test('venue formats control owner listings, booking, discovery and hosting', { timeout: 30000 }, async () => {
+  const signup = async (name, role = 'player') => (await api('/auth/signup', { method: 'POST', body: JSON.stringify({ name, role, email: `${name}@example.test`, password: 'test-password-123' }) })).body;
+  const owner = await signup('formats-owner', 'owner');
+  const otherOwner = await signup('formats-other-owner', 'owner');
+  const player = await signup('formats-player');
+  const post = (route, body, token = player.token) => api(route, { token, method: 'POST', body: JSON.stringify(body) });
+  const listing = { name: 'Formats Test Ground', location: 'Bangalore', pricePerHour: 1000 };
+  for (const formats of [[], ['9v9'], ['7v7', '7v7'], '7v7', null]) {
+    assert.equal((await post('/venues', { ...listing, formats }, owner.token)).status, 400);
+  }
+  assert.equal((await post('/venues', { ...listing, formats: ['7v7'] })).status, 403);
+  const created = await post('/venues', { ...listing, formats: ['7v7'] }, owner.token);
+  assert.equal(created.status, 201);
+  const venue = created.body.venue;
+  assert.deepEqual(venue.formats, ['7v7']);
+  assert.equal(venue.sportType, '7-a-side');
+  const date = new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 10);
+  const slot = { venueId: venue._id, date, timeSlot: '07:00 PM - 08:00 PM' };
+  assert.equal((await post('/bookings', { ...slot, format: '5v5' })).status, 400);
+  assert.equal((await post('/matches', { ...slot, format: '5v5' })).status, 400);
+  assert.equal((await api('/bookings/my-bookings', { token: player.token })).body.bookings.length, 0);
+  const single = await post('/matches', slot); // Single-format defaults come from the turf.
+  assert.equal(single.status, 201);
+  assert.equal(single.body.match.format, '7v7');
+  assert.equal(single.body.match.totalSpots, 14);
+  const bookings = (await api('/bookings/my-bookings', { token: player.token })).body.bookings;
+  assert.equal(bookings[0].format, '7v7');
+  assert.deepEqual(bookings[0].venueId.formats, ['7v7']);
+  await api(`/bookings/${bookings[0]._id}`, { token: player.token, method: 'DELETE' });
+
+  const patch = (formats, token = owner.token) => api(`/venues/${venue._id}/formats`, { token, method: 'PATCH', body: JSON.stringify({ formats }) });
+  assert.equal((await patch(['5v5'], player.token)).status, 403);
+  assert.equal((await patch(['5v5'], otherOwner.token)).status, 403);
+  assert.equal((await patch([])).status, 400);
+  const edited = await patch(['7v7', '5v5']);
+  assert.equal(edited.status, 200);
+  assert.deepEqual(edited.body.venue.formats, ['5v5', '7v7']);
+  for (const filter of ['5v5', '7v7', '7-a-side']) {
+    const results = await api(`/venues?sportType=${filter}&search=Formats%20Test`);
+    assert.deepEqual(results.body.venues.map(v => v._id), [venue._id]);
+  }
+  assert.deepEqual((await api('/venues?sportType=11-a-side&search=Formats%20Test')).body.venues, []);
+  assert.equal((await post('/bookings', slot)).status, 400); // Multiple formats require a choice.
+  assert.equal((await post('/matches', slot)).status, 400);
+  assert.equal((await post('/bookings', { ...slot, format: '11-a-side' })).status, 400);
+  assert.equal((await post('/matches', { ...slot, format: '11-a-side' })).status, 400);
+  const reserved = await post('/bookings', { ...slot, format: '7v7' });
+  assert.equal(reserved.status, 201);
+  assert.equal(reserved.body.booking.format, '7v7');
+  // Formats share the physical turf: a 5v5 request cannot double-book a 7v7 slot.
+  assert.equal((await post('/bookings', { ...slot, format: '5v5' })).status, 409);
+  assert.equal((await post('/matches', { ...slot, format: '5v5' })).status, 409);
+  assert.equal((await post('/matches', { bookingId: reserved.body.booking._id, format: '5v5' })).status, 400);
+  const linked = await post('/matches', { bookingId: reserved.body.booking._id });
+  assert.equal(linked.status, 201);
+  assert.equal(linked.body.match.format, '7v7');
+  await api(`/bookings/${reserved.body.booking._id}`, { token: player.token, method: 'DELETE' });
+  const five = await post('/matches', { ...slot, format: '5v5' });
+  assert.equal(five.status, 201);
+  assert.equal(five.body.match.format, '5v5');
+  await api(`/bookings/${five.body.match.bookingId._id}`, { token: player.token, method: 'DELETE' });
+
+  // Updating the listing cannot silently rewrite an existing booking's format.
+  const previous = await post('/bookings', { ...slot, format: '7v7' });
+  await patch(['5v5']);
+  const history = (await api('/bookings/my-bookings', { token: player.token })).body.bookings;
+  assert.equal(history[0].format, '7v7');
+  assert.equal((await post('/matches', { bookingId: previous.body.booking._id })).status, 400);
+  assert.equal((await post('/bookings', { ...slot, timeSlot: '08:00 PM - 09:00 PM', format: '7v7' })).status, 400);
+
+  // Exercise actual pre-upgrade documents, not just newly created API listings.
+  const mongoose = require('mongoose');
+  await mongoose.connect(database.getUri('demo_test'));
+  const legacyId = new mongoose.Types.ObjectId();
+  try {
+    await require('../models/Venue').collection.insertOne({
+      _id: legacyId, name: 'LegacyFormat Ground', location: 'Bangalore', area: 'Test',
+      pricePerHour: 800, sportType: '7-a-side', ownerId: new mongoose.Types.ObjectId(owner.user._id)
+    });
+  } finally { await mongoose.disconnect(); }
+  const oldListing = await api('/venues?sportType=7v7&search=LegacyFormat');
+  assert.deepEqual(oldListing.body.venues.map(v => v._id), [String(legacyId)]);
+  const oldSlot = { ...slot, venueId: String(legacyId) };
+  assert.equal((await post('/bookings', { ...oldSlot, format: '5v5' })).status, 400);
+  const oldBooking = await post('/bookings', oldSlot);
+  assert.equal(oldBooking.status, 201);
+  assert.equal(oldBooking.body.booking.format, '7v7');
+  assert.equal((await post('/matches', { bookingId: oldBooking.body.booking._id })).body.match.format, '7v7');
+});
+
+test('old single-format records and client choices use the same restricted formats', async () => {
+  const serverFormats = require('../utils/venueFormats');
+  const clientFormats = await import('../../client/src/utils/venueFormats.js');
+  const cases = [
+    [{ sportType: '7-a-side' }, ['7v7']],
+    [{ sportType: '5-a-side' }, ['5v5']],
+    [{ sportType: '11-a-side' }, ['11-a-side']],
+    [{ sportType: 'Box Cricket & Football' }, []],
+    [{ sportType: '5-a-side', formats: ['7v7'] }, ['7v7']],
+    [{ formats: ['5v5', '7v7'] }, ['5v5', '7v7']]
+  ];
+  for (const [venue, expected] of cases) {
+    assert.deepEqual(serverFormats.getVenueFormats(venue), expected);
+    assert.deepEqual(clientFormats.getVenueFormats(venue), expected);
+  }
+  assert.deepEqual(clientFormats.getHostFormats({ formats: ['5v5', '7v7'] }, { format: '7v7' }), ['7v7']);
+  assert.deepEqual(clientFormats.getHostFormats({ formats: ['5v5'] }, { format: '7v7' }), []);
+  assert.equal(clientFormats.defaultSpots('7v7'), 14);
+  assert.throws(() => serverFormats.selectBookingFormat({ sportType: '7-a-side' }, '5v5'), /offered by this turf/);
+});

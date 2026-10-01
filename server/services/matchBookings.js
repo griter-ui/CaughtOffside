@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Match = require('../models/Match');
 const Venue = require('../models/Venue');
 const { DEFAULT_SLOTS, isValidDate, isSlotExpired } = require('../utils/slots');
+const { FORMATS, selectBookingFormat, defaultSpots } = require('../utils/venueFormats');
 
 function fail(status, message) {
   throw Object.assign(new Error(message), { status });
@@ -19,11 +20,11 @@ function validateSchedule(date, timeSlot) {
 // races. Atlas or a local replica set is required; no partial reservation survives.
 async function hostMatch(userId, input) {
   const { bookingId, venueId, date, timeSlot, hostingRequestId } = input;
-  const format = input.format ?? '5v5';
-  const totalSpots = Number(input.totalSpots ?? 10);
+  const requestedFormat = input.format;
   const pricePerSpot = Number(input.pricePerSpot ?? 0);
   const notes = input.notes ?? '';
-  if (!['5v5', '7v7', '11-a-side'].includes(format) || !Number.isInteger(totalSpots) || totalSpots < 2 || totalSpots > 22 ||
+  if ((requestedFormat !== undefined && !FORMATS.includes(requestedFormat)) ||
+      (input.totalSpots !== undefined && (!Number.isInteger(Number(input.totalSpots)) || Number(input.totalSpots) < 2 || Number(input.totalSpots) > 22)) ||
       !Number.isFinite(pricePerSpot) || pricePerSpot < 0 || pricePerSpot > 100000 ||
       typeof notes !== 'string' || notes.length > 2000) {
     fail(400, 'Use a valid format, 2–22 spots, a non-negative price up to INR 100,000, and notes up to 2,000 characters.');
@@ -56,7 +57,11 @@ async function hostMatch(userId, input) {
       }], { session });
     }
     if (['cancelled', 'pending'].includes(booking.paymentStatus)) fail(409, 'This reservation is not confirmed.');
-    if (!await Venue.exists({ _id: booking.venueId }).session(session)) fail(404, 'Venue not found.');
+    const venue = await Venue.findById(booking.venueId).session(session);
+    if (!venue) fail(404, 'Venue not found.');
+    const format = selectBookingFormat(venue, requestedFormat ?? booking.format);
+    if (booking.format && booking.format !== format) fail(400, 'The match format must match your reserved format.');
+    const totalSpots = Number(input.totalSpots ?? defaultSpots(format));
     const [match] = await Match.create([{
       hostId: userId, bookingId: booking._id, venueId: booking.venueId,
       date: booking.date, timeSlot: booking.timeSlot, format, totalSpots, pricePerSpot,
@@ -64,6 +69,7 @@ async function hostMatch(userId, input) {
     }], { session });
     // Updating the existing reservation also conflicts with concurrent cancellation.
     booking.matchId = match._id;
+    booking.format = format;
     await booking.save({ session });
     return { match, booking, replay: false, newBooking: !bookingId };
   });

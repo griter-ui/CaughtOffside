@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './HostMatchModal.css';
+import { getHostFormats, defaultSpots } from '../utils/venueFormats';
 
 const indiaToday = () => new Date(Date.now() + 19800000).toISOString().slice(0, 10);
 
@@ -8,7 +9,7 @@ export default function HostMatchModal({ socket, onClose, onHosted }) {
   const [bookings, setBookings] = useState([]);
   const [mode, setMode] = useState('new');
   const [bookingId, setBookingId] = useState('');
-  const [form, setForm] = useState({ venueId: '', date: indiaToday(), timeSlot: '', format: '5v5', totalSpots: 10, pricePerSpot: 0, notes: '' });
+  const [form, setForm] = useState({ venueId: '', date: indiaToday(), timeSlot: '', format: '', totalSpots: 10, pricePerSpot: 0, notes: '' });
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -64,8 +65,20 @@ export default function HostMatchModal({ socket, onClose, onHosted }) {
     return () => { socket?.off('slot_booked', update); socket?.off('slot_cancelled', update); socket?.off('connect', reconnect); };
   }, [socket, form.venueId, form.date]);
 
+  useEffect(() => {
+    const update = venue => setVenues(previous => previous.map(item => item._id === venue._id ? venue : item));
+    socket?.on('venue_updated', update);
+    return () => socket?.off('venue_updated', update);
+  }, [socket]);
+
   const selectedBooking = bookings.find(b => b._id === bookingId);
   const selectedVenue = venues.find(v => v._id === form.venueId);
+  const bookingVenue = venues.find(v => v._id === selectedBooking?.venueId?._id) || selectedBooking?.venueId;
+  const formats = getHostFormats(mode === 'existing' ? bookingVenue : selectedVenue, mode === 'existing' ? selectedBooking : null);
+  // Derive a safe value immediately when the venue changes, avoiding a render
+  // where a stale 5v5 selection can be submitted for a 7v7-only turf.
+  const format = formats.includes(form.format) ? form.format : formats[0] || '';
+  const totalSpots = form.format === format ? form.totalSpots : defaultSpots(format);
   const price = mode === 'existing' ? selectedBooking?.price : selectedVenue?.pricePerHour;
 
   async function submit(event) {
@@ -74,7 +87,7 @@ export default function HostMatchModal({ socket, onClose, onHosted }) {
     setSaving(true);
     setError('');
     try {
-      const body = { ...form, hostingRequestId: requestId, ...(mode === 'existing' ? { bookingId } : {}) };
+      const body = { ...form, format, totalSpots, hostingRequestId: requestId, ...(mode === 'existing' ? { bookingId } : {}) };
       const res = await fetch('/api/matches', { method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) { if (res.status === 409) setRefresh(value => value + 1); throw new Error(data.message || 'Unable to host match.'); }
@@ -95,12 +108,12 @@ export default function HostMatchModal({ socket, onClose, onHosted }) {
           <form onSubmit={submit}>
             <fieldset disabled={saving}>
               <label htmlFor="host-source">Turf reservation</label>
-              <select id="host-source" value={mode} onChange={event => { setMode(event.target.value); setRequestId(crypto.randomUUID()); setError(''); }}>
+              <select id="host-source" value={mode} onChange={event => { setMode(event.target.value); change({ format: '' }); }}>
                 <option value="new">Reserve a new slot</option><option value="existing">Use my existing reservation</option>
               </select>
               {mode === 'existing' ? (
                 <><label htmlFor="host-booking">Your unused reservations</label>
-                  <select id="host-booking" value={bookingId} required onChange={event => { setBookingId(event.target.value); setRequestId(crypto.randomUUID()); }}>
+                  <select id="host-booking" value={bookingId} required onChange={event => { setBookingId(event.target.value); change({ format: '' }); }}>
                     <option value="">Select a reservation</option>
                     {bookings.map(b => <option key={b._id} value={b._id}>{b.venueId?.name} — {b.date}, {b.timeSlot}</option>)}
                   </select>
@@ -109,7 +122,7 @@ export default function HostMatchModal({ socket, onClose, onHosted }) {
                 </>
               ) : (
                 <><label htmlFor="host-venue">Turf venue</label>
-                  <select id="host-venue" value={form.venueId} required onChange={event => change({ venueId: event.target.value, timeSlot: '' })}>
+                  <select id="host-venue" value={form.venueId} required onChange={event => change({ venueId: event.target.value, timeSlot: '', format: '' })}>
                     {!venues.length && <option value="">No venues available</option>}
                     {venues.map(v => <option key={v._id} value={v._id}>{v.name} ({v.location})</option>)}
                   </select>
@@ -124,18 +137,21 @@ export default function HostMatchModal({ socket, onClose, onHosted }) {
                 </>
               )}
               <div className="host-match-fields">
-                <div><label htmlFor="host-format">Format</label><select id="host-format" value={form.format} onChange={event => change({ format: event.target.value, totalSpots: { '5v5': 10, '7v7': 14, '11-a-side': 22 }[event.target.value] })}>
-                  <option>5v5</option><option>7v7</option><option>11-a-side</option>
+                <div><label htmlFor="host-format">Format offered by turf</label><select id="host-format" value={format} required disabled={!formats.length} onChange={event => change({ format: event.target.value, totalSpots: defaultSpots(event.target.value) })}>
+                  {!formats.length && <option value="">No available formats</option>}
+                  {formats.map(option => <option key={option} value={option}>{option}</option>)}
                 </select></div>
-                <div><label htmlFor="host-spots">Spots including you</label><input id="host-spots" type="number" min="2" max="22" step="1" required value={form.totalSpots} onChange={event => change({ totalSpots: event.target.value })} /></div>
+                <div><label htmlFor="host-spots">Spots including you</label><input id="host-spots" type="number" min="2" max="22" step="1" required value={totalSpots} onChange={event => change({ format, totalSpots: event.target.value })} /></div>
                 <div><label htmlFor="host-price">Contribution / player (₹)</label><input id="host-price" type="number" min="0" max="100000" step="0.01" required value={form.pricePerSpot} onChange={event => change({ pricePerSpot: event.target.value })} /></div>
               </div>
+              {mode === 'existing' && selectedBooking?.format && <p>Your reservation is for {selectedBooking.format}; the match must use the same format.</p>}
+              {!formats.length && (selectedVenue || selectedBooking) && <p>No supported format is available for this selection. Ask the owner to update the turf formats or choose another reservation.</p>}
               <label htmlFor="host-notes">Match notes</label><textarea id="host-notes" rows="3" maxLength="2000" value={form.notes} onChange={event => change({ notes: event.target.value })} placeholder="Bring bibs, arrive 10 minutes early…" />
               <div className="host-match-summary">
                 <strong>Turf fee: {price === undefined ? 'Select a reservation or venue' : `₹${price}`}</strong>
                 <p>Pay the venue directly. Player contributions are arranged with the host; no online payment is collected.</p>
               </div>
-              <button className="auth-btn" type="submit" disabled={saving || (mode === 'new' ? slotsLoading || !form.timeSlot : !bookingId)}>
+              <button className="auth-btn" type="submit" disabled={saving || !format || (mode === 'new' ? slotsLoading || !form.timeSlot : !bookingId)}>
                 {saving ? 'Reserving & hosting…' : mode === 'existing' ? 'Host with this reservation' : 'Reserve slot & host match'}
               </button>
             </fieldset>

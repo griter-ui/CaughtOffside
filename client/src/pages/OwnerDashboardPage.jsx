@@ -1,11 +1,16 @@
 // Owner workspace: display this account's grounds, create listings and inspect/cancel
 // their reservations. Backend ownership checks remain authoritative for each write.
 import React, { useState, useEffect } from 'react';
+import VenueFormatPicker from '../components/VenueFormatPicker';
+import { getVenueFormats } from '../utils/venueFormats';
 
 export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
   const [myVenues, setMyVenues] = useState([]);
   const [bookingsLog, setBookingsLog] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingFormats, setEditingFormats] = useState(null);
+  const [savingFormats, setSavingFormats] = useState(false);
+  const [formatError, setFormatError] = useState('');
 
   // New venue listing state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -14,7 +19,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     location: '',
     area: '',
     pricePerHour: 1500,
-    sportType: '5-a-side',
+    formats: ['5v5'],
     description: '',
     photos: 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800'
   });
@@ -106,7 +111,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
           location: '',
           area: '',
           pricePerHour: 1500,
-          sportType: '5-a-side',
+          formats: ['5v5'],
           description: '',
           photos: 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800'
         });
@@ -117,6 +122,24 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
     } catch (err) {
       alert('Error creating venue listing.');
     }
+  };
+
+  const saveFormats = async () => {
+    if (savingFormats) return;
+    setSavingFormats(true);
+    setFormatError('');
+    try {
+      const res = await fetch(`/api/venues/${editingFormats._id}/formats`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionStorage.getItem('token')}` },
+        body: JSON.stringify({ formats: editingFormats.formats })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setMyVenues(previous => previous.map(venue => venue._id === data.venue._id ? data.venue : venue));
+      setEditingFormats(null);
+    } catch (error) { setFormatError(error.message || 'Unable to save formats. Try again.'); }
+    finally { setSavingFormats(false); }
   };
 
   if (!currentUser) {
@@ -209,9 +232,12 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
               <h4 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#fff' }}>{v.name}</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.85rem 0' }}> {v.location}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--pitch-green)', fontWeight: '700' }}>
-                <span>Format: {v.sportType}</span>
+                <span>Formats: {getVenueFormats(v).join(', ') || 'Not configured'}</span>
                 <span>₹{v.pricePerHour}/hr</span>
               </div>
+              <button type="button" className="nav-btn" style={{ marginTop: '1rem', border: '1px solid var(--border-color)' }} onClick={() => { setEditingFormats({ _id: v._id, name: v.name, formats: getVenueFormats(v) }); setFormatError(''); }}>
+                Edit formats
+              </button>
             </div>
           ))}
         </div>
@@ -244,7 +270,7 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
               {bookingsLog.map(b => (
                 <tr key={b._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '1rem', fontWeight: '700', color: 'var(--pitch-green)' }}>#{b.receiptId}</td>
-                  <td style={{ padding: '1rem', color: '#fff' }}>{b.venueId?.name || 'Turf'}</td>
+                  <td style={{ padding: '1rem', color: '#fff' }}>{b.venueId?.name || 'Turf'}{b.format && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{b.format}</div>}</td>
                   <td style={{ padding: '1rem', color: '#fff' }}>{b.userId?.name || 'Player'} ({b.userId?.position || 'MF'})</td>
                   <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{b.date} ({b.timeSlot})</td>
                   <td style={{ padding: '1rem', fontWeight: '700', color: '#fff' }}>₹{b.price}</td>
@@ -269,6 +295,20 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
         </div>
       )}
 
+      {editingFormats && (
+        <div className="modal-overlay" onClick={() => !savingFormats && setEditingFormats(null)}>
+          <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="edit-formats-title" onClick={event => event.stopPropagation()}>
+            <h3 id="edit-formats-title" style={{ marginBottom: '1rem' }}>Formats for {editingFormats.name}</h3>
+            <VenueFormatPicker value={editingFormats.formats} disabled={savingFormats} onChange={formats => setEditingFormats({ ...editingFormats, formats })} />
+            <p style={{ color: 'var(--text-muted)', margin: '1rem 0' }}>Existing bookings keep their selected format. New bookings and hosted matches use the formats selected here.</p>
+            {formatError && <p role="alert" style={{ color: 'var(--fire-orange)', marginBottom: '1rem' }}>{formatError}</p>}
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button type="button" className="nav-btn" disabled={savingFormats} onClick={() => setEditingFormats(null)}>Cancel</button>
+              <button type="button" className="auth-btn" disabled={savingFormats || !editingFormats.formats.length} onClick={saveFormats}>{savingFormats ? 'Saving...' : 'Save formats'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Add Venue Modal */}
       {isAddModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
@@ -330,21 +370,11 @@ export default function OwnerDashboardPage({ currentUser, embedMode = false }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Sport Pitch Format</label>
-                  <select
-                    value={newVenue.sportType}
-                    onChange={(e) => setNewVenue({ ...newVenue, sportType: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                  >
-                    <option value="5-a-side">5-a-side</option>
-                    <option value="7-a-side">7-a-side</option>
-                    <option value="11-a-side">11-a-side</option>
-                    <option value="Box Cricket & Football">Box Cricket & Football</option>
-                  </select>
+                  <VenueFormatPicker value={newVenue.formats} onChange={formats => setNewVenue({ ...newVenue, formats })} />
                 </div>
               </div>
 
-              <button type="submit" className="auth-btn" style={{ width: '100%', padding: '0.85rem' }}>
+              <button type="submit" disabled={!newVenue.formats.length} className="auth-btn" style={{ width: '100%', padding: '0.85rem' }}>
                 Publish Venue Listing
               </button>
             </form>

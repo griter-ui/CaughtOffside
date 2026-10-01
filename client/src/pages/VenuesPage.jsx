@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+// Venue browsing + reservation dialog. Reads /api/venues, delegates availability to
+// SlotGrid, and writes POST /api/bookings. Selected form values are not reservations.
+import React, { useState, useEffect, useCallback } from 'react';
 import SlotGrid from '../components/SlotGrid';
+import { FORMAT_OPTIONS, getVenueFormats } from '../utils/venueFormats';
 
 export default function VenuesPage({ socket, currentUser }) {
   const [venues, setVenues] = useState([]);
@@ -11,13 +14,18 @@ export default function VenuesPage({ socket, currentUser }) {
   // Selected venue for booking modal
   const [activeVenue, setActiveVenue] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedFormat, setSelectedFormat] = useState('');
+  const availableFormats = getVenueFormats(activeVenue);
+  const bookingFormat = availableFormats.includes(selectedFormat) ? selectedFormat : availableFormats[0] || '';
 
-  // Payment & Receipt States
+  // Dialog stages: choose -> review -> confirmed receipt. Legacy "payment" names
+  // describe a pay-at-venue reservation; there is no online charge in this flow.
   const [paymentStep, setPaymentStep] = useState('slot'); // 'slot' | 'payment' | 'receipt'
   const [bookingReceipt, setBookingReceipt] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
 
-  const fetchVenues = async () => {
+  // Turn filter state into URL query parameters, then replace the fetched list.
+  const fetchVenues = useCallback(async () => {
     setLoading(true);
     try {
       let url = `/api/venues?sportType=${selectedSport}&search=${encodeURIComponent(searchQuery)}`;
@@ -33,41 +41,50 @@ export default function VenuesPage({ socket, currentUser }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedSport, searchQuery, maxPrice]);
 
+  // Refetch when filters change. There is currently no debounce/latest-response guard.
   useEffect(() => {
     fetchVenues();
-  }, [selectedSport, searchQuery, maxPrice]);
+  }, [fetchVenues]);
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('venue_created', (newVenue) => {
-      setVenues(prev => [newVenue, ...prev]);
-    });
-
-    return () => {
-      socket.off('venue_created');
+    // Refetch on changes so the active format/search filters remain authoritative.
+    const created = () => fetchVenues();
+    const updated = venue => {
+      fetchVenues();
+      setActiveVenue(previous => previous?._id === venue._id ? venue : previous);
     };
-  }, [socket]);
+    socket.on('venue_created', created);
+    socket.on('venue_updated', updated);
+    return () => { socket.off('venue_created', created); socket.off('venue_updated', updated); };
+  }, [socket, fetchVenues]);
 
-  // Filter out venues owned by the current user so they don't book their own turf!
+  // Hide the caller's own venues in this view. The booking API does not enforce
+  // this particular UI preference as an ownership restriction.
   const availableVenuesToBook = venues.filter(v => {
     if (!currentUser) return true;
     const ownerIdStr = typeof v.ownerId === 'object' ? v.ownerId?._id : v.ownerId;
     return ownerIdStr !== currentUser._id;
   });
 
+  // Reset the previous selection/receipt before starting another reservation draft.
   const handleOpenBookingModal = (venue) => {
     setActiveVenue(venue);
+    setSelectedFormat(getVenueFormats(venue)[0] || '');
     setSelectedSlot(null);
     setPaymentStep('slot');
     setBookingReceipt(null);
   };
 
+  // The server rechecks availability and ignores the submitted price in favor of
+  // its venue record. Only a successful response advances to the confirmed receipt.
   const handleConfirmPay = async () => {
     if (!currentUser) return alert('Please login to book a venue.');
     if (!selectedSlot) return alert('Please select a date and time slot first.');
+    if (!bookingFormat) return alert('This turf has no configured football formats.');
 
     const token = sessionStorage.getItem('token');
     setProcessingPayment(true);
@@ -81,6 +98,7 @@ export default function VenuesPage({ socket, currentUser }) {
         },
         body: JSON.stringify({
           venueId: activeVenue._id,
+          format: bookingFormat,
           date: selectedSlot.date,
           timeSlot: selectedSlot.timeSlot,
           price: activeVenue.pricePerHour
@@ -128,9 +146,7 @@ export default function VenuesPage({ socket, currentUser }) {
           style={{ flex: '0 0 160px', padding: '0.75rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
         >
           <option value="All">All Formats</option>
-          <option value="5-a-side">5-a-side</option>
-          <option value="7-a-side">7-a-side</option>
-          <option value="11-a-side">11-a-side</option>
+          {FORMAT_OPTIONS.map(({ value }) => <option key={value} value={value}>{value}</option>)}
           <option value="Box Cricket & Football">Box Cricket & Football</option>
         </select>
 
@@ -168,7 +184,7 @@ export default function VenuesPage({ socket, currentUser }) {
                   {v.rating > 0 ? `★ ${v.rating}` : 'New ground'}
                 </span>
                 <span style={{ position: 'absolute', bottom: '10px', left: '10px', background: '#e2e8dd', color: '#000', padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
-                  {v.sportType}
+                  {getVenueFormats(v).join(' / ') || 'Football formats not configured'}
                 </span>
               </div>
 
@@ -203,7 +219,7 @@ export default function VenuesPage({ socket, currentUser }) {
         </div></div>
       )}
 
-      {/* Booking & Payment Modal */}
+      {/* Reservation dialog: outside clicks close it; clicks inside remain in the form. */}
       {activeVenue && (
         <div className="modal-overlay" onClick={() => setActiveVenue(null)}>
           <div className="modal-content" style={{ maxWidth: '640px' }} onClick={(e) => e.stopPropagation()}>
@@ -225,6 +241,12 @@ export default function VenuesPage({ socket, currentUser }) {
                    {activeVenue.location} • ₹{activeVenue.pricePerHour}/hr
                 </p>
 
+                <label htmlFor="booking-format" style={{ display: 'block', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Format offered by turf</label>
+                <select id="booking-format" value={bookingFormat} disabled={!availableFormats.length} onChange={event => setSelectedFormat(event.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-input)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '1rem' }}>
+                  {!availableFormats.length && <option value="">No football formats configured</option>}
+                  {availableFormats.map(format => <option key={format} value={format}>{format}</option>)}
+                </select>
+                {!availableFormats.length && <p role="status">The owner needs to select football formats for this turf before you can book.</p>}
                 <SlotGrid
                   venueId={activeVenue._id}
                   selectedSlot={selectedSlot}
@@ -242,6 +264,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     </div>
                     <button
                       className="auth-btn"
+                      disabled={!bookingFormat}
                       onClick={() => setPaymentStep('payment')}
                     >
                       Continue to Reservation ₹{activeVenue.pricePerHour} →
@@ -251,7 +274,7 @@ export default function VenuesPage({ socket, currentUser }) {
               </div>
             )}
 
-            {/* STEP 2: Payment Checkout */}
+            {/* STEP 2: Review venue/date/price before saving a pay-at-venue reservation. */}
             {paymentStep === 'payment' && (
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.25rem' }}>Review your reservation</h4>
@@ -268,6 +291,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     <span style={{ color: 'var(--text-muted)' }}>Date & Slot:</span>
                     <span style={{ fontWeight: '700', color: 'var(--pitch-green)' }}>{selectedSlot.date} ({selectedSlot.timeSlot})</span>
                   </div>
+                  <p style={{ marginBottom: '0.5rem' }}>Format: <b>{bookingFormat || 'No longer offered - choose another turf'}</b></p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', fontSize: '1.1rem', fontWeight: '600' }}>
                     <span>Venue fee:</span>
                     <span style={{ color: 'var(--pitch-green)' }}>₹{activeVenue.pricePerHour}</span>
@@ -286,7 +310,7 @@ export default function VenuesPage({ socket, currentUser }) {
                     className="auth-btn"
                     style={{ flex: 2, padding: '0.85rem' }}
                     onClick={handleConfirmPay}
-                    disabled={processingPayment}
+                    disabled={processingPayment || !bookingFormat}
                   >
                     {processingPayment ? 'Reserving...' : `Reserve this slot`}
                   </button>
@@ -310,7 +334,7 @@ export default function VenuesPage({ socket, currentUser }) {
                      Date: {bookingReceipt.date}
                   </p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                     Time Slot: {bookingReceipt.timeSlot}
+                     Format: {bookingReceipt.format}<br />Time Slot: {bookingReceipt.timeSlot}
                   </p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
                      Venue fee: ₹{bookingReceipt.price} (pay at venue)
